@@ -1,0 +1,29 @@
+name: Publish Sheep Dog Ops Snapshot
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "develop" ]
+    paths:
+      - '.github/**'
+      - '**/docker/**'
+      - '**/src/**'
+      - '**/pom.xml'
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  sheep-dog-test:
+    uses: farhan5248/sheep-dog-ops/.github/workflows/snapshot.yml@main
+    with:
+      project: 'sheep-dog-test'
+    secrets: inherit
+
+  merge-into-main:
+    needs: [sheep-dog-test]
+    uses: farhan5248/sheep-dog-ops/.github/workflows/merge.yml@main
+    with:
+      source: 'develop'
+      target: 'main'
+    secrets: inherit
