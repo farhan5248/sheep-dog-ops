@@ -14,14 +14,14 @@ permissions:
   packages: write
 
 jobs:
-  sheep-dog-test:
+  sheep-dog-mgmt-maven-plugin:
     uses: farhan5248/sheep-dog-ops/.github/workflows/snapshot.yml@main
     with:
-      project: 'sheep-dog-test'
+      project: 'sheep-dog-mgmt-maven-plugin'
     secrets: inherit
 
   merge-into-main:
-    needs: [sheep-dog-test]
+    needs: [sheep-dog-mgmt-maven-plugin]
     uses: farhan5248/sheep-dog-ops/.github/workflows/merge.yml@main
     with:
       source: 'develop'
