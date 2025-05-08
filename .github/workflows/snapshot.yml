@@ -22,7 +22,7 @@ on:
           - sheepdogxtextplugin.parent
 jobs:
   build:
-    runs-on: [farhan5248-runners, windows]
+    runs-on: [farhan5248-runners]
     permissions:
       contents: read
       packages: write
