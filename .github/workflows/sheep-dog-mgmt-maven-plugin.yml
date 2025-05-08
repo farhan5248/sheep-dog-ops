@@ -1,0 +1,14 @@
+name: Publish Sheep Dog Management Maven Plugin
+
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  packages: write
+jobs:
+  sheep-dog-test:
+    uses: ./.github/workflows/release.yml
+    with:
+      project: 'sheep-dog-mgmt-maven-plugin'
+      plugin: 'Maven'
+    secrets: inherit

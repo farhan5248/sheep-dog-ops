@@ -1,0 +1,50 @@
+name: Merge
+
+on:
+  workflow_call:
+    inputs:
+      source:
+        description: 'source'
+        required: true
+        type: string
+      target:
+        description: 'target'
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'source'
+        required: true
+        type: choice
+        options:
+          - main
+          - develop
+      target:
+        description: 'target'
+        required: true
+        type: choice
+        options:
+          - main
+          - develop
+jobs:
+  build:
+    runs-on: [farhan5248-runners, linux]
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Set up Git
+      run: |
+        git config --local user.name "${{ secrets.ACTIONS_BOT_NAME }}"
+        git config --local user.email "${{ secrets.ACTIONS_BOT_EMAIL }}"
+    - name: Merge source into target
+      run: |
+        git fetch origin
+        git checkout ${{ inputs.target }}
+        git merge origin/${{ inputs.source }}
+        git push origin ${{ inputs.target }}
+      env:
+        GITHUB_TOKEN: ${{ github.token }}

@@ -1,0 +1,89 @@
+name: Release
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        required: true
+        type: string
+      plugin:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      project:
+        description: 'Project'
+        required: true
+        type: choice
+        options:
+          - sheep-dog-mgmt-maven-plugin
+          - sheep-dog-dev
+          - sheep-dog-dev-maven-plugin
+          - sheep-dog-dev-svc
+          - sheep-dog-dev-svc-maven-plugin
+          - sheep-dog-test
+          - sheepdogcucumber.parent
+          - sheepdogxtextplugin.parent
+      plugin:
+        description: 'Release plugin organisation'
+        required: true
+        type: choice
+        options:
+          - Maven
+          - Sheep
+jobs:
+  build:
+    runs-on: [farhan5248-runners, linux]
+    permissions:
+      contents: write
+      packages: write
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@v5
+      with:
+        maven-version: '3.9.9'
+    - name: Set up Git
+      run: |
+        git config --local user.name "${{ secrets.ACTIONS_BOT_NAME }}"
+        git config --local user.email "${{ secrets.ACTIONS_BOT_EMAIL }}"
+    - name: Publish Release version
+      working-directory: ./${{ inputs.project }}
+      run: |
+        git reset --hard HEAD
+        git clean -fdx
+        git pull
+        mvn org.codehaus.mojo:versions-maven-plugin:update-properties -DallowSnapshots=false -DallowDowngrade=true
+        if [ ${{ inputs.plugin }} == Maven ]; then
+          mvn -B release:prepare -DcheckModificationExcludeList=pom.xml -DpreparationGoals=deploy -Darguments=-DskipTests
+        else
+          mvn org.farhan:sheep-dog-mgmt-maven-plugin:1.14:prepare -DpreparationGoals=deploy,-DskipTests
+        fi
+        git push
+        git push --tags
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+        ARTEMIS_USER: ${{ secrets.ARTEMIS_USER }}
+        ARTEMIS_PASSWORD: ${{ secrets.ARTEMIS_PASSWORD }}
+    - name: Publish SNAPSHOT version
+      working-directory: ./${{ inputs.project }}
+      run: |
+        mvn org.codehaus.mojo:versions-maven-plugin:update-properties -DallowSnapshots=true
+        git clean -fdx
+        if [[ $(git status --porcelain --untracked-files=no | wc -l) -gt 0 ]]; then
+          git add *
+          git commit -m "Upgrading dependency versions"
+          git push
+        fi
+        mvn clean deploy -DskipTests
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+        ARTEMIS_USER: ${{ secrets.ARTEMIS_USER }}
+        ARTEMIS_PASSWORD: ${{ secrets.ARTEMIS_PASSWORD }}

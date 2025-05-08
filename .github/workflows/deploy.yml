@@ -1,0 +1,29 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      namespace:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      namespace:
+        description: 'Kubernetes namespace'
+        required: true
+        type: choice
+        options:
+          - snapshot
+          - release
+jobs:
+  build:
+    runs-on: [farhan5248-runners, linux]
+    permissions:
+      contents: read
+      packages: read
+    steps:
+    - uses: actions/checkout@v4
+    - name: Deploy to Kubernetes
+      working-directory: ./sheep-dog-specs
+      run: |
+          kubectl apply -k docker/overlays/${{ inputs.namespace }}
