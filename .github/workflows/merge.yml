@@ -38,8 +38,8 @@ jobs:
         fetch-depth: 0
     - name: Set up Git
       run: |
-        git config --local user.name "${{ secrets.ACTIONS_BOT_NAME }}"
-        git config --local user.email "${{ secrets.ACTIONS_BOT_EMAIL }}"
+        git config --local user.name "${{ vars.ACTIONS_BOT_NAME }}"
+        git config --local user.email "${{ vars.ACTIONS_BOT_EMAIL }}"
     - name: Merge source into target
       run: |
         git fetch origin
