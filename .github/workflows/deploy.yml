@@ -6,6 +6,10 @@ on:
       namespace:
         required: true
         type: string
+    project:
+      description: 'Project'
+      required: true
+      type: string
   workflow_dispatch:
     inputs:
       namespace:
@@ -15,7 +19,13 @@ on:
         options:
           - snapshot
           - release
-jobs:
+    project:
+      description: 'Project'
+      required: true
+      type: choice
+      options:
+        - sheep-dog-dev-svc
+  jobs:
   build:
     runs-on: [farhan5248-runners, linux]
     permissions:
@@ -24,6 +34,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Deploy to Kubernetes
-      working-directory: ./sheep-dog-specs
+      working-directory: ./${{ inputs.project }}
       run: |
           kubectl apply -k docker/overlays/${{ inputs.namespace }}
