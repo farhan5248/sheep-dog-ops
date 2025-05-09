@@ -64,7 +64,6 @@ jobs:
         git push --tags
       env:
         GITHUB_TOKEN: ${{ github.token }}
-        MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
     - name: Publish SNAPSHOT version
       working-directory: ./${{ inputs.project }}
       run: |
@@ -78,4 +77,3 @@ jobs:
         mvn clean deploy -DskipTests
       env:
         GITHUB_TOKEN: ${{ github.token }}
-        MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
