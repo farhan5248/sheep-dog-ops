@@ -6,10 +6,10 @@ on:
       namespace:
         required: true
         type: string
-    project:
-      description: 'Project'
-      required: true
-      type: string
+      project:
+        description: 'Project'
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       namespace:
@@ -19,12 +19,13 @@ on:
         options:
           - snapshot
           - release
-    project:
-      description: 'Project'
-      required: true
-      type: choice
-      options:
-        - sheep-dog-dev-svc
+      project:
+        description: 'Project'
+        required: true
+        type: choice
+        options:
+          - sheep-dog-dev-svc
+jobs:
   build:
     runs-on: [farhan5248-runners, linux]
     permissions:
