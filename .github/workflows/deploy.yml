@@ -25,7 +25,6 @@ on:
       type: choice
       options:
         - sheep-dog-dev-svc
-  jobs:
   build:
     runs-on: [farhan5248-runners, linux]
     permissions:
