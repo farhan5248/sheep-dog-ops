@@ -44,10 +44,6 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
-    - name: Set up Maven
-      uses: stCarolas/setup-maven@v5
-      with:
-        maven-version: '3.9.9'
     - name: Set up Git
       run: |
         git config --local user.name "${{ secrets.ACTIONS_BOT_NAME }}"
@@ -69,8 +65,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ github.token }}
         MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-        ARTEMIS_USER: ${{ secrets.ARTEMIS_USER }}
-        ARTEMIS_PASSWORD: ${{ secrets.ARTEMIS_PASSWORD }}
     - name: Publish SNAPSHOT version
       working-directory: ./${{ inputs.project }}
       run: |
@@ -85,5 +79,3 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ github.token }}
         MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-        ARTEMIS_USER: ${{ secrets.ARTEMIS_USER }}
-        ARTEMIS_PASSWORD: ${{ secrets.ARTEMIS_PASSWORD }}
