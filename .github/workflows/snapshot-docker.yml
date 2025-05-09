@@ -57,5 +57,3 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ github.token }}
         MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-        ARTEMIS_USER: ${{ secrets.ARTEMIS_USER }}
-        ARTEMIS_PASSWORD: ${{ secrets.ARTEMIS_PASSWORD }}
