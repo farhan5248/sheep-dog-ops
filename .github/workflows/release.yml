@@ -46,8 +46,8 @@ jobs:
         distribution: 'temurin'
     - name: Set up Git
       run: |
-        git config --local user.name "${{ secrets.ACTIONS_BOT_NAME }}"
-        git config --local user.email "${{ secrets.ACTIONS_BOT_EMAIL }}"
+        git config --local user.name "${{ vars.ACTIONS_BOT_NAME }}"
+        git config --local user.email "${{ vars.ACTIONS_BOT_EMAIL }}"
     - name: Publish Release version
       working-directory: ./${{ inputs.project }}
       run: |
