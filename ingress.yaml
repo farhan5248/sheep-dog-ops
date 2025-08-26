@@ -9,10 +9,17 @@ spec:
     - host: dev.sheepdogdev.io
       http:
         paths:
+          - path: "/mcp"
+            pathType: Prefix
+            backend:
+              service:
+                name: sheep-dog-dev-mcp
+                port:
+                  number: 80
           - path: "/"
             pathType: Prefix
             backend:
               service:
                 name: sheep-dog-dev-svc
                 port:
-                  number: 80
+                  number: 80                  
