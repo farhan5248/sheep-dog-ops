@@ -1,4 +1,4 @@
-name: Publish Sheep Dog Management Maven Plugin
+name: Publish Sheep Dog Management Maven Plugin Release
 
 on:
   workflow_dispatch:
