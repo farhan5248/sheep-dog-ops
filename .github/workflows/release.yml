@@ -58,7 +58,7 @@ jobs:
         if [ ${{ inputs.plugin }} == Maven ]; then
           mvn -B release:prepare -DcheckModificationExcludeList=pom.xml -DpreparationGoals=deploy -Darguments=-DskipTests
         else
-          mvn org.farhan:sheep-dog-mgmt-maven-plugin:1.14:prepare -DpreparationGoals=deploy,-DskipTests
+          mvn org.farhan:sheep-dog-mgmt-maven-plugin:1.15:prepare -DpreparationGoals=deploy,-DskipTests
         fi
         git push
         git push --tags
