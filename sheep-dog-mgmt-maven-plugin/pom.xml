@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.farhan</groupId>
     <artifactId>sheep-dog-mgmt-maven-plugin</artifactId>
-    <version>1.15</version>
+    <version>1.16-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
     <name>Lean Sheep Dog Tools Management Maven Plugin</name>
     <properties>
@@ -12,7 +12,7 @@
     </properties>
     <scm>
         <connection>scm:git:https://github.com/farhan5248/sheep-dog-ops</connection>
-        <tag>sheep-dog-mgmt-maven-plugin-1.15</tag>
+        <tag>HEAD</tag>
     </scm>
     <repositories>
         <repository>
