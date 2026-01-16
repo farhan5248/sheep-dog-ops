@@ -7,7 +7,7 @@ permissions:
   packages: write
 jobs:
   sheep-dog-mgmt-maven-plugin:
-    uses: farhan5248/sheep-dog-ops/.github/workflows/release.yml@main
+    uses: farhan5248/sheep-dog-ops/.github/workflows/maven-release.yml@main
     with:
       project: 'sheep-dog-mgmt-maven-plugin'
       plugin: 'Maven'
