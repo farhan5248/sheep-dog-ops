@@ -15,11 +15,11 @@ on:
         type: choice
         options:
           - sheep-dog-mgmt-maven-plugin
-          - sheep-dog-dev
-          - sheep-dog-dev-maven-plugin
           - sheep-dog-test
           - sheepdogcucumber.parent
           - sheepdogxtextplugin.parent
+          - sheep-dog-dev
+          - sheep-dog-dev-maven-plugin
 jobs:
   build:
     runs-on: [farhan5248-runners]
