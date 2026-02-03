@@ -38,7 +38,7 @@ jobs:
         git reset --hard HEAD
         git clean -fdx
         git pull
-        gradle clean release --refresh-dependencies
+        gradle clean publish release --refresh-dependencies
         git push
         git push --tags
       env:
