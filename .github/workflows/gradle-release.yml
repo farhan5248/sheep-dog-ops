@@ -38,7 +38,7 @@ jobs:
         git reset --hard HEAD
         git clean -fdx
         git pull
-        gradle release
+        gradle clean release --refresh-dependencies
         git push
         git push --tags
       env:
@@ -47,6 +47,6 @@ jobs:
       working-directory: ./${{ inputs.project }}
       run: |
         git clean -fdx
-        gradle publish
+        gradle clean publish --refresh-dependencies
       env:
         GITHUB_TOKEN: ${{ github.token }}

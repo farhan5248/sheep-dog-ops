@@ -33,6 +33,6 @@ jobs:
     - name: Run Gradle
       working-directory: ./${{ inputs.project }}
       run: |
-        gradle publish
+        gradle clean publish --refresh-dependencies
       env:
         GITHUB_TOKEN: ${{ github.token }}
