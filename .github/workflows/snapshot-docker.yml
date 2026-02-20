@@ -14,6 +14,7 @@ on:
         required: true
         type: choice
         options:
+          - darmok-maven-plugin
           - sheep-dog-dev-svc
           - sheep-dog-dev-svc-maven-plugin
           - sheep-dog-dev-mcp
