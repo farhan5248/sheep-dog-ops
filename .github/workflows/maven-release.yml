@@ -22,7 +22,7 @@ on:
           - sheep-dog-dev-maven-plugin
           - sheep-dog-dev-svc
           - sheep-dog-dev-svc-maven-plugin
-          - sheep-dog-test
+          - sheep-dog-grammar
           - sheepdogcucumber.parent
           - sheepdogxtextplugin.parent
       plugin:
