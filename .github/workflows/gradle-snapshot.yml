@@ -15,7 +15,7 @@ on:
         type: choice
         options:
           - sheepdogasciidoc.parent
-          - xtextasciidocplugin.parent
+          - sheepdogvscodeplugin
 jobs:
   build:
     runs-on: [farhan5248-runners]
