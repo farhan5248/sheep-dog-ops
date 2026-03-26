@@ -23,6 +23,7 @@ on:
           - sheep-dog-dev-svc
           - sheep-dog-dev-svc-maven-plugin
           - sheep-dog-grammar
+          - sheepdogasciidoc.parent
           - sheepdogcucumber.parent
           - sheepdogxtextplugin.parent
       plugin:

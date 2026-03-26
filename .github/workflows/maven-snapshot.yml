@@ -16,6 +16,7 @@ on:
         options:
           - sheep-dog-mgmt-maven-plugin
           - sheep-dog-grammar
+          - sheepdogasciidoc.parent
           - sheepdogcucumber.parent
           - sheepdogxtextplugin.parent
           - sheep-dog-dev
