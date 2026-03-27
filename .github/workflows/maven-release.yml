@@ -25,7 +25,6 @@ on:
           - sheep-dog-grammar
           - sheepdogasciidoc.parent
           - sheepdogcucumber.parent
-          - sheepdogxtextplugin.parent
       plugin:
         description: 'Release plugin organisation'
         required: true

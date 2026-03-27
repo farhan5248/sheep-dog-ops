@@ -18,7 +18,6 @@ on:
           - sheep-dog-grammar
           - sheepdogasciidoc.parent
           - sheepdogcucumber.parent
-          - sheepdogxtextplugin.parent
           - sheep-dog-dev
           - sheep-dog-dev-maven-plugin
 jobs:

@@ -12,8 +12,7 @@ on:
         required: true
         type: choice
         options:
-          - sheepdogasciidoc.parent
-          - sheepdogvscodeplugin
+          - sheep-dog-vscode-plugin
 jobs:
   build:
     runs-on: [farhan5248-runners]
