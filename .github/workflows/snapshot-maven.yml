@@ -14,12 +14,13 @@ on:
         required: true
         type: choice
         options:
-          - sheep-dog-mgmt-maven-plugin
-          - sheep-dog-grammar
-          - sheepdogasciidoc.parent
-          - sheepdogcucumber.parent
           - sheep-dog-dev
           - sheep-dog-dev-maven-plugin
+          - sheep-dog-grammar
+          - sheep-dog-mgmt-maven-plugin
+          - sheepdogasciidoc.parent
+          - sheepdogcucumber.parent
+          - sheepdogeclipseplugin.parent
 jobs:
   build:
     runs-on: [farhan5248-runners]
