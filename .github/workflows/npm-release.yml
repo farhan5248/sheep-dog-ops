@@ -35,4 +35,6 @@ jobs:
       run: npm install
     - name: Package extension
       working-directory: ./${{ inputs.project }}
-      run: npx vsce package --out build/${{ inputs.project }}.vsix
+      run: |
+        mkdir -p build
+        npx vsce package --out build/${{ inputs.project }}.vsix
