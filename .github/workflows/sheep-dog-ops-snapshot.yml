@@ -3,7 +3,7 @@ name: Publish Sheep Dog Ops Snapshot
 on:
   workflow_dispatch:
   push:
-    branches: [ "develop" ]
+    branches: [ "main" ]
     paths:
       - '.github/**'
       - '**/docker/**'
@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   sheep-dog-mgmt-maven-plugin:
-    uses: farhan5248/sheep-dog-ops/.github/workflows/maven-snapshot.yml@main
+    uses: farhan5248/sheep-dog-ops/.github/workflows/snapshot-maven.yml@main
     with:
       project: 'sheep-dog-mgmt-maven-plugin'
     secrets: inherit
@@ -24,6 +24,6 @@ jobs:
     needs: [sheep-dog-mgmt-maven-plugin]
     uses: farhan5248/sheep-dog-ops/.github/workflows/merge.yml@main
     with:
-      source: 'develop'
-      target: 'main'
+      source: 'main'
+      target: 'develop'
     secrets: inherit
