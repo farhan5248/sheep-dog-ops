@@ -1,5 +1,4 @@
-name: NPM Release
-
+name: Gradle Release
 on:
   workflow_call:
     inputs:
@@ -22,19 +21,32 @@ jobs:
       packages: write
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
       with:
-        node-version: '20'
+        java-version: '21'
+        distribution: 'temurin'
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@v4
     - name: Set up Git
       run: |
         git config --local user.name "${{ vars.ACTIONS_BOT_NAME }}"
         git config --local user.email "${{ vars.ACTIONS_BOT_EMAIL }}"
-    - name: Install dependencies
-      working-directory: ./${{ inputs.project }}
-      run: npm install
-    - name: Package extension
+    - name: Publish Release version
       working-directory: ./${{ inputs.project }}
       run: |
-        mkdir -p build
-        npx vsce package --out build/${{ inputs.project }}.vsix
+        git reset --hard HEAD
+        git clean -fdx
+        git pull
+        gradle release --refresh-dependencies
+        git push
+        git push --tags
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+    - name: Publish SNAPSHOT version
+      working-directory: ./${{ inputs.project }}
+      run: |
+        git clean -fdx
+        gradle clean publish --refresh-dependencies
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
