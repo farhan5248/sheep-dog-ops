@@ -17,8 +17,8 @@ on:
         type: choice
         options:
           - darmok-maven-plugin
+          - sheep-dog-asciidoc-api
           - sheep-dog-dev
-          - sheep-dog-dev-maven-plugin
           - sheep-dog-dev-svc
           - sheep-dog-dev-svc-maven-plugin
           - sheep-dog-grammar

@@ -14,8 +14,8 @@ on:
         required: true
         type: choice
         options:
+          - sheep-dog-asciidoc-api
           - sheep-dog-dev
-          - sheep-dog-dev-maven-plugin
           - sheep-dog-grammar
           - sheep-dog-mgmt-maven-plugin
           - sheepdogasciidoc.parent
