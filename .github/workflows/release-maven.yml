@@ -21,7 +21,7 @@ on:
           - sheep-dog-asciidoc-api-svc
           - sheep-dog-cucumber-gen
           - sheep-dog-cucumber-gen-svc
-          - sheep-dog-dev-svc-maven-plugin
+          - sheep-dog-svc-maven-plugin
           - sheep-dog-grammar
           - sheep-dog-mgmt-maven-plugin
           - sheepdogasciidoc.parent

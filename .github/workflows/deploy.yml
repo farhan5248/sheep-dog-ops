@@ -27,7 +27,7 @@ on:
         options:
           - sheep-dog-asciidoc-api-svc
           - sheep-dog-cucumber-gen-svc
-          - sheep-dog-dev-mcp
+          - sheep-dog-mcp-svc
 jobs:
   build:
     runs-on: [farhan5248-runners, linux]

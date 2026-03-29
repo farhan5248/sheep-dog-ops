@@ -15,9 +15,9 @@ on:
         type: choice
         options:
           - darmok-maven-plugin
-          - sheep-dog-dev-mcp
+          - sheep-dog-mcp-svc
           - sheep-dog-dev-svc
-          - sheep-dog-dev-svc-maven-plugin
+          - sheep-dog-svc-maven-plugin
 jobs:
   build:
     runs-on: [farhan5248-runners, linux]
