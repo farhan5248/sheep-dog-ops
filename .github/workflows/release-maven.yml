@@ -20,7 +20,7 @@ on:
           - sheep-dog-asciidoc-api
           - sheep-dog-asciidoc-api-svc
           - sheep-dog-cucumber-gen
-          - sheep-dog-dev-svc
+          - sheep-dog-cucumber-gen-svc
           - sheep-dog-dev-svc-maven-plugin
           - sheep-dog-grammar
           - sheep-dog-mgmt-maven-plugin
