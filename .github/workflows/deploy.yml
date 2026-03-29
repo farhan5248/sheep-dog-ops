@@ -17,14 +17,17 @@ on:
         required: true
         type: choice
         options:
-          - snapshot
-          - release
+          - dev
+          - qa
+          - prod
       project:
         description: 'Project'
         required: true
         type: choice
         options:
-          - sheep-dog-dev-svc
+          - sheep-dog-asciidoc-api-svc
+          - sheep-dog-cucumber-gen-svc
+          - sheep-dog-dev-mcp
 jobs:
   build:
     runs-on: [farhan5248-runners, linux]
