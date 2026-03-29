@@ -18,6 +18,7 @@ on:
         options:
           - darmok-maven-plugin
           - sheep-dog-asciidoc-api
+          - sheep-dog-asciidoc-api-svc
           - sheep-dog-cucumber-gen
           - sheep-dog-dev-svc
           - sheep-dog-dev-svc-maven-plugin
