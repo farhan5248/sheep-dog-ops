@@ -15,7 +15,7 @@ on:
         type: choice
         options:
           - sheep-dog-asciidoc-api
-          - sheep-dog-dev
+          - sheep-dog-cucumber-gen
           - sheep-dog-grammar
           - sheep-dog-mgmt-maven-plugin
           - sheepdogasciidoc.parent
