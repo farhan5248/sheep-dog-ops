@@ -16,7 +16,8 @@ on:
         options:
           - darmok-maven-plugin
           - sheep-dog-mcp-svc
-          - sheep-dog-dev-svc
+          - sheep-dog-asciidoc-api-svc
+          - sheep-dog-cucumber-gen-svc
           - sheep-dog-svc-maven-plugin
 jobs:
   build:
