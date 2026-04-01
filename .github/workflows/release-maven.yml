@@ -36,7 +36,7 @@ on:
           - Sheep
 jobs:
   build:
-    runs-on: [farhan5248-runners, qa]
+    runs-on: [farhan5248-runners]
     permissions:
       contents: write
       packages: write

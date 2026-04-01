@@ -21,7 +21,7 @@ on:
           - sheep-dog-svc-maven-plugin
 jobs:
   build:
-    runs-on: [farhan5248-runners, dev]
+    runs-on: [farhan5248-runners]
     permissions:
       contents: read
       packages: write
