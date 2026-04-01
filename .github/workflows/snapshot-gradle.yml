@@ -17,7 +17,7 @@ on:
           - sheep-dog-vscode-plugin
 jobs:
   build:
-    runs-on: [farhan5248-runners]
+    runs-on: [farhan5248-runners, dev]
     permissions:
       contents: read
       packages: write
