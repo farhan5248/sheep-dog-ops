@@ -33,6 +33,6 @@ jobs:
     - name: Run Gradle
       working-directory: ./${{ inputs.project }}
       run: |
-        gradle clean publish --refresh-dependencies
+        gradle clean publish --refresh-dependencies "-Dmaven.repo.local=D:\repository"
       env:
         GITHUB_TOKEN: ${{ github.token }}
