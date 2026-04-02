@@ -47,6 +47,7 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
+        overwrite-settings: false
     - name: Set up Git
       run: |
         git config --local user.name "${{ vars.ACTIONS_BOT_NAME }}"

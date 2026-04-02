@@ -32,6 +32,7 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
+        overwrite-settings: false
     - name: Run Maven
       working-directory: ./${{ inputs.project }}
       run: |
