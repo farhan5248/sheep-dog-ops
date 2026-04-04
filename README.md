@@ -1,14 +1,27 @@
-# Building and Running
+# Sheep Dog Ops
 
-These are basic steps to build the plug-ins and then test them out
+Operations repo with reusable GitHub Actions workflows and release management.
 
-1. Install Eclipse
-2. Clone this repo and the qa one
-3. For each project, do **Run As > Maven install**. The order shouldn't matter since all the dependencies are available online. You can find the order in the GitHub workflow files.
-4. Test the Maven plug-in by running the `/home/developer/git/sheep-dog-qa/sheep-dog-specs/scripts/forward-engineer.bat` script and then `/home/developer/git/sheep-dog-local/sheep-dog-grammar/scripts/forward-engineer.bat` script.
-5. Test the Xtext plug-in by installing the plugin archive file found in `/home/developer/git/sheep-dog-local/sheepdogxtextplugin.parent/sheepdogxtextplugin.repository/target` and modifying the files in the **sheep-dog-specs** directory.
+## Projects
 
-There's 3 types of GitHub Actions workflows.
-1. Those that run the Maven release plug-in on the `main` branch. They're named after each Maven module. I run these to tag Maven modules. 
-2. Those that run `mvn clean deploy` on the `develop` branch. They're named after the Git repo.
-3. Re-usable workflows found in the sheep-dog-ops Git repo. 
+| Project | Description |
+|---------|-------------|
+| sheep-dog-mgmt-maven-plugin | Management Maven plugin for release coordination |
+
+## Reusable Workflows
+
+The `.github/workflows/` directory contains reusable workflows called by the other repos:
+
+| Workflow | Purpose |
+|----------|---------|
+| snapshot-maven.yml | Deploy Maven snapshot artifacts to GitHub Packages |
+| snapshot-docker.yml | Build and push Docker snapshot images |
+| snapshot-gradle.yml | Deploy Gradle snapshot artifacts |
+| release-maven.yml | Run Maven release plugin to tag and publish a release |
+| release-gradle.yml | Run Gradle release to tag and publish a release |
+| merge.yml | Merge automation between branches |
+| deploy.yml | Deploy services to Kubernetes |
+
+## Build Command
+
+Run `scripts/install.bat` in the `sheep-dog-mgmt-maven-plugin` directory.
