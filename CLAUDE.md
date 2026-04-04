@@ -63,7 +63,7 @@ The `cheatsheet.txt` provides reference commands for:
 
 ### Build Order Position
 This repository is **first** in the build order:
-1. **sheep-dog-ops** → 2. **sheep-dog-qa** → 3. **sheep-dog-local** → 4. **sheep-dog-cloud**
+1. **sheep-dog-ops** → 2. **sheep-dog-specs** → 3. **sheep-dog-local** → 4. **sheep-dog-cloud**
 
 ### Dependencies Provided
 - **Management Plugin**: Used by other repositories for release management

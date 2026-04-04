@@ -1,6 +1,6 @@
 # Sheep Dog Ops
 
-Operations repo with reusable GitHub Actions workflows and release management.
+CI/CD infrastructure for the sheep-dog ecosystem. Provides reusable GitHub Actions workflows that the other repos call for snapshot builds, releases, and deployments. Also includes a custom Maven plugin for managing Xtext project releases where the standard Maven release plugin doesn't work.
 
 ## Projects
 
