@@ -48,7 +48,7 @@ public class PrepareMojo extends AbstractMojo {
 				mvnPhase(preparationGoals);
 
 				String[] cvParts = cv.split("\\.");
-				String nv = cvParts[0] + "." + String.valueOf(Integer.parseInt(cvParts[1]) + 1) + "." + cvParts[2];
+				String nv = cvParts[0] + "." + String.valueOf(Integer.parseInt(cvParts[1]) + 1);
 				getLog().info("next version: " + nv);
 
 				updateVersion(project.getBasedir(), "<version>", cv + "</version>", nv + "-SNAPSHOT</version>",
@@ -131,6 +131,12 @@ public class PrepareMojo extends AbstractMojo {
 	}
 
 	protected void gitTag(String tag) throws Exception {
+		try {
+			String[] deleteCommand = { "git", "tag", "-d", tag };
+			runCommand(deleteCommand);
+		} catch (Exception e) {
+			getLog().info("Tag " + tag + " does not exist locally, skipping delete");
+		}
 		String[] tagCommand = { "git", "tag", tag };
 		runCommand(tagCommand);
 	}
