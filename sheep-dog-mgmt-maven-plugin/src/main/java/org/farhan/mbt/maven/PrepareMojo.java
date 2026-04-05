@@ -31,6 +31,7 @@ public class PrepareMojo extends AbstractMojo {
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		try {
+			if (project.isExecutionRoot()) {
 				String cv = project.getVersion().replace("-SNAPSHOT", "");
 				getLog().info("current version: " + cv);
 
@@ -57,6 +58,7 @@ public class PrepareMojo extends AbstractMojo {
 				getLog().info("Commit changes");
 				gitCommit("prepare for next development iteration");
 
+			}
 		} catch (Exception e) {
 			throw new MojoExecutionException(e);
 		}
