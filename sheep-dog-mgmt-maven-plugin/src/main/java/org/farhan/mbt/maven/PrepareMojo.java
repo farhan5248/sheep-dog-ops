@@ -48,7 +48,12 @@ public class PrepareMojo extends AbstractMojo {
 				mvnPhase(preparationGoals);
 
 				String[] cvParts = cv.split("\\.");
-				String nv = cvParts[0] + "." + String.valueOf(Integer.parseInt(cvParts[1]) + 1);
+				String nv;
+				if (cvParts.length >= 3) {
+					nv = cvParts[0] + "." + cvParts[1] + "." + String.valueOf(Integer.parseInt(cvParts[2]) + 1);
+				} else {
+					nv = cvParts[0] + "." + String.valueOf(Integer.parseInt(cvParts[1]) + 1);
+				}
 				getLog().info("next version: " + nv);
 
 				updateVersion(project.getBasedir(), "<version>", cv + "</version>", nv + "-SNAPSHOT</version>",
