@@ -6,9 +6,6 @@ on:
       project:
         required: true
         type: string
-      plugin:
-        required: true
-        type: string
   workflow_dispatch:
     inputs:
       project:
@@ -21,19 +18,13 @@ on:
           - sheep-dog-asciidoc-api-svc
           - sheep-dog-cucumber-gen
           - sheep-dog-cucumber-gen-svc
+          - sheep-dog-mcp-svc
           - sheep-dog-svc-maven-plugin
           - sheep-dog-grammar
           - sheep-dog-mgmt-maven-plugin
           - sheepdogasciidoc.parent
           - sheepdogcucumber.parent
           - sheepdogeclipseplugin.parent
-      plugin:
-        description: 'Release plugin organisation'
-        required: true
-        type: choice
-        options:
-          - Maven
-          - Sheep
 jobs:
   build:
     runs-on: [farhan5248-runners]
@@ -59,11 +50,7 @@ jobs:
         git clean -fdx
         git pull
         mvn org.codehaus.mojo:versions-maven-plugin:update-properties -DallowSnapshots=false -DallowDowngrade=true
-        if [ ${{ inputs.plugin }} == Maven ]; then
-          mvn -B release:prepare -DcheckModificationExcludeList=pom.xml -DpreparationGoals=deploy -Darguments=-DskipTests
-        else
-          mvn org.farhan:sheep-dog-mgmt-maven-plugin:prepare -DpreparationGoals=deploy,-DskipTests
-        fi
+        mvn org.farhan:sheep-dog-mgmt-maven-plugin:prepare -DpreparationGoals=deploy,-DskipTests
         git push
         git push --tags
       env:

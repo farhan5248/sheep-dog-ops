@@ -10,5 +10,4 @@ jobs:
     uses: farhan5248/sheep-dog-ops/.github/workflows/maven-release.yml@main
     with:
       project: 'sheep-dog-mgmt-maven-plugin'
-      plugin: 'Maven'
     secrets: inherit
