@@ -89,7 +89,7 @@
             <plugin>
                 <groupId>org.farhan</groupId>
                 <artifactId>sheep-dog-mgmt-maven-plugin</artifactId>
-                <version>1.16</version>
+                <version>1.18</version>
             </plugin>
         </plugins>
     </build>
