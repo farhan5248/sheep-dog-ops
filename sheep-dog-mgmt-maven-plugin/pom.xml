@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.farhan</groupId>
     <artifactId>sheep-dog-mgmt-maven-plugin</artifactId>
-    <version>1.19</version>
+    <version>1.20-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
     <name>Sheep Dog Management Maven Plugin</name>
     <properties>
