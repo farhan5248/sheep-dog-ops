@@ -41,8 +41,8 @@ jobs:
         overwrite-settings: false
     - name: Set up Git
       run: |
-        git config --global user.name "${{ vars.ACTIONS_BOT_NAME }}"
-        git config --global user.email "${{ vars.ACTIONS_BOT_EMAIL }}"
+        git config --local user.name "${{ vars.ACTIONS_BOT_NAME }}"
+        git config --local user.email "${{ vars.ACTIONS_BOT_EMAIL }}"
     - name: Release
       working-directory: ./${{ inputs.project }}
       run: mvn org.farhan:sheep-dog-mgmt-maven-plugin:release
