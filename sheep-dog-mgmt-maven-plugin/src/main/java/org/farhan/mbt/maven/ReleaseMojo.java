@@ -16,6 +16,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
+// aggregator=true so multi-module reactor builds only run this once on the root,
+// not on each child module
 @Mojo(name = "release", aggregator = true)
 public class ReleaseMojo extends AbstractMojo {
 
@@ -32,22 +34,26 @@ public class ReleaseMojo extends AbstractMojo {
 		MavenRunner mvn = new MavenRunner(getLog());
 
 		try {
-			// Step 1: Reset to clean state
+			// Start from a known clean state matching remote, so local experiments
+			// or failed builds don't interfere
 			runOrFail(git, workingDir, "reset", "--hard", "HEAD");
 			runOrFail(git, workingDir, "clean", "-fdx");
 			runOrFail(git, workingDir, "pull");
 
-			// Step 2: Update dependency properties to release versions
+			// Resolve SNAPSHOT dependency properties to release versions so the
+			// released artifact depends on stable releases, not moving targets
 			runOrFail(mvn, workingDir,
 					"org.codehaus.mojo:versions-maven-plugin:update-properties",
 					"-DallowSnapshots=false", "-DallowDowngrade=true");
 
-			// Step 3: Check if release is needed
+			// Only release if there's a reason to: either a dependency got a new
+			// release version (pom changed above), or someone committed real changes
+			// since the last release cycle
 			boolean dependencyChange = hasUncommittedChanges(git, workingDir);
-			boolean sourceChange = hasCommitsSinceLastTag(git, workingDir);
+			boolean sourceChange = hasSourceChanges(git, workingDir);
 
 			if (!dependencyChange && !sourceChange) {
-				getLog().info("No dependency changes and no source changes since last tag, skipping release");
+				getLog().info("No dependency changes and no source changes since last release, skipping");
 				return;
 			}
 
@@ -55,10 +61,11 @@ public class ReleaseMojo extends AbstractMojo {
 				getLog().info("Dependency changes detected, releasing");
 			}
 			if (sourceChange) {
-				getLog().info("Source changes since last tag, releasing");
+				getLog().info("Source changes since last release, releasing");
 			}
 
-			// Step 4: Prepare release (version update, commit, tag, deploy, bump)
+			// Remove -SNAPSHOT suffix from version strings across all project files
+			// (pom.xml, OSGi MANIFEST.MF, Eclipse feature.xml) to create the release version
 			String cv = project.getVersion().replace("-SNAPSHOT", "");
 			getLog().info("current version: " + cv);
 
@@ -68,9 +75,12 @@ public class ReleaseMojo extends AbstractMojo {
 			gitCommit(git, workingDir, "prepare release " + project.getArtifactId() + "-" + cv);
 			gitTag(git, workingDir, project.getArtifactId() + "-" + cv);
 
+			// Build and publish the release artifacts
 			getLog().info("Run Maven deploy");
 			mvnPhase(mvn, workingDir, preparationGoals);
 
+			// Tycho/Eclipse projects need 3-part versions (OSGi requires major.minor.patch),
+			// while regular Maven projects use 2-part
 			String[] cvParts = cv.split("\\.");
 			String nv;
 			if (cvParts.length >= 3) {
@@ -80,25 +90,25 @@ public class ReleaseMojo extends AbstractMojo {
 			}
 			getLog().info("next version: " + nv);
 
+			// Set up for next development cycle
 			updateVersion(project.getBasedir(), "<version>", cv + "</version>", nv + "-SNAPSHOT</version>", "pom.xml");
 			updateVersion(project.getBasedir(), "Bundle-Version: ", cv + "", nv + ".qualifier", "MANIFEST.MF");
 			updateVersion(project.getBasedir(), "version=\"", cv + "\"", nv + ".qualifier\"", "feature.xml");
 			gitCommit(git, workingDir, "prepare for next development iteration");
 
-			// Step 5: Push commits and tags
 			runOrFail(git, workingDir, "push");
 			runOrFail(git, workingDir, "push", "--tags");
 
-			// Step 6: Update dependency properties to SNAPSHOT versions
+			// Switch dependency properties back to SNAPSHOTs so downstream projects
+			// can continue developing against the latest. This is a separate commit
+			// because the dependency upgrade is logically distinct from the release.
 			runOrFail(mvn, workingDir,
 					"org.codehaus.mojo:versions-maven-plugin:update-properties",
 					"-DallowSnapshots=true");
 			runOrFail(git, workingDir, "clean", "-fdx");
-
-			// Step 7: Commit dependency version changes if any
 			commitDependencyChangesIfAny(git, workingDir);
 
-			// Step 8: Deploy SNAPSHOT
+			// Publish the SNAPSHOT so downstream projects can resolve the latest
 			runOrFail(mvn, workingDir, "clean", "deploy", "-DskipTests");
 
 		} catch (Exception e) {
@@ -106,37 +116,34 @@ public class ReleaseMojo extends AbstractMojo {
 		}
 	}
 
+	// After update-properties resolves SNAPSHOTs to releases, any pom.xml diff
+	// means a dependency has a new release version that this project should pick up.
+	// Excludes .bat files since those aren't release-relevant.
 	private boolean hasUncommittedChanges(GitRunner git, String workingDir) throws Exception {
 		int exitCode = git.run(workingDir, "diff", "--quiet", "HEAD", "--", ".", ":(exclude)*.bat");
 		return exitCode != 0;
 	}
 
-	private boolean hasCommitsSinceLastTag(GitRunner git, String workingDir) throws Exception {
-		String tag = project.getArtifactId() + "-" + project.getVersion().replace("-SNAPSHOT", "");
-		// Check if previous release tag exists
-		String prevTag = getPreviousTag(tag);
-		int exitCode = git.run(workingDir, "rev-parse", "--verify", prevTag);
-		if (exitCode != 0) {
-			getLog().info("No previous tag " + prevTag + " found, treating as new project");
+	// Finds the most recent release-process commit in this directory and checks if
+	// any files changed since then. "Upgrading dependency versions" is the last commit
+	// of a release cycle; "prepare for next development iteration" is the fallback
+	// when no dependency upgrade happened. If neither exists, this project has never
+	// been released so it always needs one.
+	private boolean hasSourceChanges(GitRunner git, String workingDir) throws Exception {
+		String lastReleaseCommit = git.runAndCapture(workingDir, "log", "--oneline", "-1",
+				"--grep=Upgrading dependency versions", "--", ".");
+		if (lastReleaseCommit.isEmpty()) {
+			lastReleaseCommit = git.runAndCapture(workingDir, "log", "--oneline", "-1",
+					"--grep=prepare for next development iteration", "--", ".");
+		}
+		if (lastReleaseCommit.isEmpty()) {
+			getLog().info("No previous release commits found, treating as new project");
 			return true;
 		}
-		// Check if there are commits since that tag
-		exitCode = git.run(workingDir, "log", prevTag + "..HEAD", "--oneline", "--", ".");
-		return exitCode == 0;
-	}
-
-	private String getPreviousTag(String currentTag) {
-		// currentTag is like "sheep-dog-grammar-1.44" — the previous release was 1.43
-		String prefix = currentTag.substring(0, currentTag.lastIndexOf("-") + 1);
-		String version = currentTag.substring(currentTag.lastIndexOf("-") + 1);
-		String[] parts = version.split("\\.");
-		if (parts.length >= 3) {
-			int patch = Integer.parseInt(parts[2]) - 1;
-			return prefix + parts[0] + "." + parts[1] + "." + patch;
-		} else {
-			int minor = Integer.parseInt(parts[1]) - 1;
-			return prefix + parts[0] + "." + minor;
-		}
+		String sha = lastReleaseCommit.split(" ")[0];
+		getLog().info("Last release commit: " + lastReleaseCommit);
+		String diff = git.runAndCapture(workingDir, "diff", sha + "..HEAD", "--name-only", "--", ".");
+		return !diff.isEmpty();
 	}
 
 	private void mvnPhase(MavenRunner mvn, String workingDir, String preparationGoals) throws Exception {
@@ -148,6 +155,7 @@ public class ReleaseMojo extends AbstractMojo {
 		runOrFail(mvn, workingDir, args);
 	}
 
+	// On failure, prints git status so the user can see what went wrong
 	private void gitCommit(GitRunner git, String workingDir, String message) throws Exception {
 		try {
 			runOrFail(git, workingDir, "add", ".");
@@ -158,8 +166,9 @@ public class ReleaseMojo extends AbstractMojo {
 		}
 	}
 
+	// Deletes local tag first so failed builds can be restarted without
+	// "tag already exists" errors
 	private void gitTag(GitRunner git, String workingDir, String tag) throws Exception {
-		// Delete local tag if it exists (supports restarting failed builds)
 		git.run(workingDir, "tag", "-d", tag);
 		runOrFail(git, workingDir, "tag", tag);
 	}
@@ -176,6 +185,10 @@ public class ReleaseMojo extends AbstractMojo {
 		}
 	}
 
+	// Recursively finds files matching fileName under the project directory and
+	// does a string replacement. Used because the same version appears in pom.xml
+	// (Maven), MANIFEST.MF (OSGi), and feature.xml (Eclipse) across parent and
+	// child modules.
 	protected void updateVersion(File project, String start, String currentVersionEnd, String nextVersionEnd,
 			String fileName) throws Exception {
 		String currentVersionSearchTerm = start + currentVersionEnd;

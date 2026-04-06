@@ -49,6 +49,29 @@ public class ProcessRunner {
 		return process.waitFor();
 	}
 
+	public String runAndCapture(String workingDirectory, String... args) throws Exception {
+		List<String> command = buildCommand(args);
+
+		ProcessBuilder pb = new ProcessBuilder(command);
+		pb.directory(new File(workingDirectory));
+		pb.redirectErrorStream(true);
+
+		log.info("Running: " + String.join(" ", command));
+
+		Process process = pb.start();
+		process.getOutputStream().close();
+		StringBuilder output = new StringBuilder();
+		try (BufferedReader reader = new BufferedReader(
+				new InputStreamReader(process.getInputStream()))) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				output.append(line).append("\n");
+			}
+		}
+		process.waitFor();
+		return output.toString().trim();
+	}
+
 	protected Log getLog() {
 		return log;
 	}
