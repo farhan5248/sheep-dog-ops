@@ -9,6 +9,9 @@ on:
       - '**/docker/**'
       - '**/src/**'
       - '**/pom.xml'
+concurrency:
+  group: sheep-dog-ops
+  cancel-in-progress: false
 permissions:
   contents: write
   packages: write
