@@ -1,4 +1,4 @@
-name: Publish Sheep Dog Management Maven Plugin Release
+name: Publish Sheep Dog Ops Release
 
 on:
   workflow_dispatch:
@@ -8,9 +8,10 @@ concurrency:
 permissions:
   contents: write
   packages: write
+
 jobs:
   sheep-dog-mgmt-maven-plugin:
-    uses: farhan5248/sheep-dog-ops/.github/workflows/maven-release.yml@main
+    uses: farhan5248/sheep-dog-ops/.github/workflows/release-maven.yml@main
     with:
       project: 'sheep-dog-mgmt-maven-plugin'
     secrets: inherit
