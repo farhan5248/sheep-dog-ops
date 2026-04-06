@@ -72,7 +72,7 @@ public class ReleaseMojo extends AbstractMojo {
 			updateVersion(project.getBasedir(), "<version>", cv + "-SNAPSHOT</version>", cv + "</version>", "pom.xml");
 			updateVersion(project.getBasedir(), "Bundle-Version: ", cv + ".qualifier", cv + "", "MANIFEST.MF");
 			updateVersion(project.getBasedir(), "version=\"", cv + ".qualifier\"", cv + "\"", "feature.xml");
-			gitCommit(git, workingDir, "prepare release " + project.getArtifactId() + "-" + cv);
+			gitCommit(git, workingDir, "[Release] Prepare release " + project.getArtifactId() + "-" + cv);
 			gitTag(git, workingDir, project.getArtifactId() + "-" + cv);
 
 			// Build and publish the release artifacts
@@ -94,7 +94,7 @@ public class ReleaseMojo extends AbstractMojo {
 			updateVersion(project.getBasedir(), "<version>", cv + "</version>", nv + "-SNAPSHOT</version>", "pom.xml");
 			updateVersion(project.getBasedir(), "Bundle-Version: ", cv + "", nv + ".qualifier", "MANIFEST.MF");
 			updateVersion(project.getBasedir(), "version=\"", cv + "\"", nv + ".qualifier\"", "feature.xml");
-			gitCommit(git, workingDir, "prepare for next development iteration");
+			gitCommit(git, workingDir, "[Release] Prepare for next development iteration");
 
 			runOrFail(git, workingDir, "push");
 			runOrFail(git, workingDir, "push", "--tags");
@@ -125,18 +125,12 @@ public class ReleaseMojo extends AbstractMojo {
 		return exitCode != 0;
 	}
 
-	// Finds the most recent release-process commit in this directory and checks if
-	// any files changed since then. "Upgrading dependency versions" is the last commit
-	// of a release cycle; "prepare for next development iteration" is the fallback
-	// when no dependency upgrade happened. If neither exists, this project has never
-	// been released so it always needs one.
+	// Finds the most recent [Release] commit in this directory and checks if any
+	// files changed since then. All commits made by this plugin are prefixed with
+	// [Release], so one search always finds the end of the last release cycle.
 	private boolean hasSourceChanges(GitRunner git, String workingDir) throws Exception {
 		String lastReleaseCommit = git.runAndCapture(workingDir, "log", "--oneline", "-1",
-				"--grep=Upgrading dependency versions", "--", ".");
-		if (lastReleaseCommit.isEmpty()) {
-			lastReleaseCommit = git.runAndCapture(workingDir, "log", "--oneline", "-1",
-					"--grep=prepare for next development iteration", "--", ".");
-		}
+				"--grep=\\[Release\\]", "--", ".");
 		if (lastReleaseCommit.isEmpty()) {
 			getLog().info("No previous release commits found, treating as new project");
 			return true;
@@ -179,7 +173,7 @@ public class ReleaseMojo extends AbstractMojo {
 		if (exitCode != 0) {
 			getLog().info("Dependency versions changed, committing");
 			git.run(workingDir, "add", ".");
-			runOrFail(git, workingDir, "commit", "-m", "Upgrading dependency versions");
+			runOrFail(git, workingDir, "commit", "-m", "[Release] Upgrading dependency versions");
 			runOrFail(git, workingDir, "push");
 		} else {
 			getLog().info("No dependency changes to commit");
