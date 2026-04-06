@@ -44,7 +44,7 @@ public class ReleaseMojo extends AbstractMojo {
 			// released artifact depends on stable releases, not moving targets
 			runOrFail(mvn, workingDir,
 					"org.codehaus.mojo:versions-maven-plugin:update-properties",
-					"-DallowSnapshots=false", "-DallowDowngrade=true");
+					"-DallowSnapshots=false");
 
 			// Only release if there's a reason to: either a dependency got a new
 			// release version (pom changed above), or someone committed real changes
@@ -117,8 +117,9 @@ public class ReleaseMojo extends AbstractMojo {
 	}
 
 	// After update-properties resolves SNAPSHOTs to releases, any pom.xml diff
-	// means a dependency has a new release version that this project should pick up.
-	// Excludes .bat files since those aren't release-relevant.
+	// means a dependency has a new release version. We don't use -DallowDowngrade
+	// so update-properties only changes a property if a genuinely newer release
+	// exists (e.g. 1.50-SNAPSHOT won't downgrade to 1.49).
 	private boolean hasUncommittedChanges(GitRunner git, String workingDir) throws Exception {
 		int exitCode = git.run(workingDir, "diff", "--quiet", "HEAD", "--", ".", ":(exclude)*.bat");
 		return exitCode != 0;
