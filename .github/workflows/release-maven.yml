@@ -43,28 +43,8 @@ jobs:
       run: |
         git config --local user.name "${{ vars.ACTIONS_BOT_NAME }}"
         git config --local user.email "${{ vars.ACTIONS_BOT_EMAIL }}"
-    - name: Publish Release version
+    - name: Release
       working-directory: ./${{ inputs.project }}
-      run: |
-        git reset --hard HEAD
-        git clean -fdx
-        git pull
-        mvn org.codehaus.mojo:versions-maven-plugin:update-properties -DallowSnapshots=false -DallowDowngrade=true
-        mvn org.farhan:sheep-dog-mgmt-maven-plugin:prepare -DpreparationGoals=deploy,-DskipTests
-        git push
-        git push --tags
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-    - name: Publish SNAPSHOT version
-      working-directory: ./${{ inputs.project }}
-      run: |
-        mvn org.codehaus.mojo:versions-maven-plugin:update-properties -DallowSnapshots=true
-        git clean -fdx
-        if [[ $(git status --porcelain --untracked-files=no | wc -l) -gt 0 ]]; then
-          git add *
-          git commit -m "Upgrading dependency versions"
-          git push
-        fi
-        mvn clean deploy -DskipTests
+      run: mvn org.farhan:sheep-dog-mgmt-maven-plugin:release
       env:
         GITHUB_TOKEN: ${{ github.token }}
