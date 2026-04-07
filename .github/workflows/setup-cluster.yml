@@ -1,0 +1,111 @@
+name: Setup Cluster
+
+on:
+  workflow_call:
+    inputs:
+      suffix:
+        description: 'Suffix for the stack name'
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+    outputs:
+      service_url:
+        description: "The service URL"
+        value: ${{ jobs.setup-k8s.outputs.service_url }}
+  workflow_dispatch:
+    inputs:
+      suffix:
+        description: 'Suffix for the stack name'
+        required: true
+        default: '1'
+
+jobs:
+  setup-k8s:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sheep-dog
+    env:
+      BASE_STACK_NAME: sheep-dog-aws
+      REGION: us-east-1
+      NAMESPACE: prod
+    outputs:
+      service_url: ${{ steps.get_service_url.outputs.service_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Get EKS Cluster Name from CloudFormation
+        id: get_cluster_name
+        run: |
+          STACK_NAME="${BASE_STACK_NAME}-${{ inputs.suffix }}"
+          CLUSTER_NAME=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" \
+            --output text \
+            --region $REGION)
+          echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name "$CLUSTER_NAME" --region $REGION
+
+      - name: Create namespace if not exists
+        run: |
+          kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Apply full stack
+        run: |
+          kubectl apply -k kubernetes/complete/overlays/$NAMESPACE/
+
+      - name: Restart deployments
+        run: |
+          kubectl rollout restart deployment sheep-dog-asciidoc-api-svc -n $NAMESPACE
+          kubectl rollout restart deployment sheep-dog-cucumber-gen-svc -n $NAMESPACE
+          kubectl rollout restart deployment sheep-dog-mcp-svc -n $NAMESPACE
+
+      - name: Wait for rollouts to complete
+        run: |
+          kubectl rollout status deployment sheep-dog-asciidoc-api-svc -n $NAMESPACE
+          kubectl rollout status deployment sheep-dog-cucumber-gen-svc -n $NAMESPACE
+          kubectl rollout status deployment sheep-dog-mcp-svc -n $NAMESPACE
+
+      - name: Wait for service external IP
+        run: sleep 60
+
+      - name: Wait for Ingress hostname
+        run: |
+          for i in {1..30}; do
+            SERVICE_URL=$(kubectl get ingress sheep-dog-ingress -n $NAMESPACE -o jsonpath="{.status.loadBalancer.ingress[0].hostname}")
+            if [ -n "$SERVICE_URL" ]; then
+              echo "Ingress hostname: $SERVICE_URL"
+              exit 0
+            fi
+            echo "Waiting for Ingress hostname... (attempt $i/30)"
+            sleep 10
+          done
+          echo "Failed to get Ingress hostname"
+          exit 1
+
+      - name: Get Ingress URL
+        id: get_service_url
+        run: |
+          SERVICE_URL=$(kubectl get ingress sheep-dog-ingress -n $NAMESPACE -o jsonpath="{.status.loadBalancer.ingress[0].hostname}")
+          echo "service_url=$SERVICE_URL" >> $GITHUB_OUTPUT
