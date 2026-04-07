@@ -72,6 +72,7 @@ public class ReleaseMojo extends AbstractMojo {
 			updateVersion(project.getBasedir(), "<version>", cv + "-SNAPSHOT</version>", cv + "</version>", "pom.xml");
 			updateVersion(project.getBasedir(), "Bundle-Version: ", cv + ".qualifier", cv + "", "MANIFEST.MF");
 			updateVersion(project.getBasedir(), "version=\"", cv + ".qualifier\"", cv + "\"", "feature.xml");
+			updateVersion(project.getBasedir(), "\"version\": \"", cv + "-SNAPSHOT\"", cv + "\"", "package.json");
 			gitCommit(git, workingDir, "[Release] Prepare release " + project.getArtifactId() + "-" + cv);
 			gitTag(git, workingDir, project.getArtifactId() + "-" + cv);
 
@@ -94,6 +95,7 @@ public class ReleaseMojo extends AbstractMojo {
 			updateVersion(project.getBasedir(), "<version>", cv + "</version>", nv + "-SNAPSHOT</version>", "pom.xml");
 			updateVersion(project.getBasedir(), "Bundle-Version: ", cv + "", nv + ".qualifier", "MANIFEST.MF");
 			updateVersion(project.getBasedir(), "version=\"", cv + "\"", nv + ".qualifier\"", "feature.xml");
+			updateVersion(project.getBasedir(), "\"version\": \"", cv + "\"", nv + "-SNAPSHOT\"", "package.json");
 			gitCommit(git, workingDir, "[Release] Prepare for next development iteration");
 
 			runOrFail(git, workingDir, "push");
