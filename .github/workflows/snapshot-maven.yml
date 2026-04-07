@@ -21,6 +21,7 @@ on:
           - sheepdogasciidoc.parent
           - sheepdogcucumber.parent
           - sheepdogeclipseplugin.parent
+          - sheep-dog-vscode-plugin
 jobs:
   build:
     runs-on: [farhan5248-runners]
