@@ -29,15 +29,14 @@ jobs:
 
   forward-engineer:
     needs: setup-cluster
-    runs-on: ubuntu-latest
+    runs-on: [farhan5248-runners]
+    permissions:
+      contents: read
+      packages: read
     env:
       HOST: ${{ needs.setup-cluster.outputs.service_url }}
     steps:
-      - name: Checkout sheep-dog-specs
-        uses: actions/checkout@v4
-        with:
-          repository: farhan5248/sheep-dog-specs
-          path: sheep-dog-specs
+      - uses: actions/checkout@v4
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -45,16 +44,9 @@ jobs:
           distribution: 'temurin'
           overwrite-settings: false
       - name: Forward engineer
-        working-directory: sheep-dog-specs/sheep-dog-features
+        working-directory: sheep-dog
         run: |
-          mvn clean
-          mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="asciidoc-api" -Dhost="$HOST"
-          mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="cucumber-gen" -Dhost="$HOST"
-          mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="grammar" -Dhost="$HOST"
           mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="svc-maven-plugin" -Dhost="$HOST"
-          mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="asciidoc-api-svc" -Dhost="$HOST"
-          mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="cucumber-gen-svc" -Dhost="$HOST"
-          mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="mcp-svc" -Dhost="$HOST"
         env:
           GITHUB_TOKEN: ${{ github.token }}
 

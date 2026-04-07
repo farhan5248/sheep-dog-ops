@@ -31,13 +31,6 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-echo Are you sure you want to delete the CloudFormation stack %STACK_NAME%? (y/n)
-set /p CONFIRM=
-if /i "%CONFIRM%" neq "y" (
-    echo Operation cancelled.
-    exit /b 0
-)
-
 REM For EKS, we need to clean up Kubernetes resources first
 echo Checking if kubectl is installed...
 kubectl version --client

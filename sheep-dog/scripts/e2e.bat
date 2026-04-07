@@ -10,8 +10,6 @@ if "%SUFFIX%"=="" (
     exit /b 1
 )
 
-set SPECS_DIR=..\..\..\sheep-dog-specs\sheep-dog-features
-
 echo --- Setup Stack ---
 call aws-setup-stack.bat %SUFFIX%
 if %ERRORLEVEL% neq 0 (
@@ -27,15 +25,8 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo --- Forward Engineer ---
-pushd %SPECS_DIR%
-call mvn clean
-call mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="asciidoc-api" -Dhost="%SERVICE_URL%"
-call mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="cucumber-gen" -Dhost="%SERVICE_URL%"
-call mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="grammar" -Dhost="%SERVICE_URL%"
+pushd ..
 call mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="svc-maven-plugin" -Dhost="%SERVICE_URL%"
-call mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="asciidoc-api-svc" -Dhost="%SERVICE_URL%"
-call mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="cucumber-gen-svc" -Dhost="%SERVICE_URL%"
-call mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="mcp-svc" -Dhost="%SERVICE_URL%"
 set FE_RESULT=%ERRORLEVEL%
 popd
 if %FE_RESULT% neq 0 (

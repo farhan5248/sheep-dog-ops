@@ -105,7 +105,7 @@ jobs:
             --cluster-name "$CLUSTER_NAME" \
             --addon-name aws-ebs-csi-driver \
             --service-account-role-arn arn:aws:iam::${ACCOUNT_ID}:role/EBSCSIDriverRole \
-            --addon-version v1.44.0-eksbuild.1 \
+            --addon-version v1.57.1-eksbuild.1 \
             --resolve-conflicts OVERWRITE || echo "Addon may already exist, continuing..."
 
       - name: Wait for EBS CSI driver add-on to become active (max 60s)

@@ -109,7 +109,7 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo Creating EBS CSI driver add-on in EKS...
-aws eks create-addon --cluster-name %CLUSTER_NAME% --addon-name aws-ebs-csi-driver --service-account-role-arn arn:aws:iam::%ACCOUNT_ID%:role/EBSCSIDriverRole --addon-version v1.44.0-eksbuild.1 --resolve-conflicts OVERWRITE
+aws eks create-addon --cluster-name %CLUSTER_NAME% --addon-name aws-ebs-csi-driver --service-account-role-arn arn:aws:iam::%ACCOUNT_ID%:role/EBSCSIDriverRole --addon-version v1.57.1-eksbuild.1 --resolve-conflicts OVERWRITE
 if %ERRORLEVEL% neq 0 (
     echo Couldn't create EBS CSI driver add-on in EKS.
     exit /b 1
