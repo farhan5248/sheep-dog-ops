@@ -63,14 +63,19 @@ jobs:
         run: |
           aws eks update-kubeconfig --name "$CLUSTER_NAME" --region $REGION
 
-      - name: Check for lingering load balancers (if cluster exists)
+      - name: Check for lingering cluster load balancers (if cluster exists)
         if: env.CLUSTER_NAME != ''
         run: |
-          LB_NAMES=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?contains(LoadBalancerName, '$STACK_NAME')].LoadBalancerName" --output text)
-          if [ ! -z "$LB_NAMES" ]; then
-            echo "WARNING: Found lingering load balancers: $LB_NAMES"
-            echo "You may need to delete these manually before proceeding."
-            exit 0
+          LB_COUNT=$(aws resourcegroupstaggingapi get-resources \
+            --resource-type-filters elasticloadbalancing:loadbalancer \
+            --tag-filters "Key=kubernetes.io/cluster/$CLUSTER_NAME,Values=owned" \
+            --query "length(ResourceTagMappingList)" \
+            --output text \
+            --region $REGION)
+          if [ "$LB_COUNT" != "0" ]; then
+            echo "ERROR: Found $LB_COUNT lingering load balancer(s) for cluster $CLUSTER_NAME."
+            echo "The teardown-cluster step should have removed them."
+            exit 1
           fi
 
       - name: Delete EBS CSI driver IAM policy and role

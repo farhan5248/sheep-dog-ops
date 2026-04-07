@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 echo %time%
 echo Tearing down AWS CloudFormation stack
 
@@ -43,15 +44,12 @@ echo Getting EKS cluster name...
 for /f "tokens=*" %%i in ('aws cloudformation describe-stacks --stack-name %STACK_NAME% --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" --output text --region %REGION%') do set CLUSTER_NAME=%%i
 
 if not "%CLUSTER_NAME%"=="" (
-    echo Configuring kubectl to connect to the EKS cluster...
-    aws eks update-kubeconfig --name %CLUSTER_NAME% --region %REGION%
-
-    echo Checking for lingering load balancers...
-    aws elbv2 describe-load-balancers --query "LoadBalancers[?contains(LoadBalancerName, '%STACK_NAME%')].LoadBalancerName" --output text
-    if %ERRORLEVEL% neq 0 (
-        echo WARNING: Found lingering load balancers that may prevent VPC deletion.
-        echo You may need to delete these manually before proceeding.
-        exit /b 0
+    echo Checking for lingering cluster load balancers...
+    for /f "delims=" %%c in ('aws resourcegroupstaggingapi get-resources --resource-type-filters elasticloadbalancing:loadbalancer --tag-filters "Key=kubernetes.io/cluster/%CLUSTER_NAME%,Values=owned" --query "length(ResourceTagMappingList)" --output text --region %REGION%') do set LB_COUNT=%%c
+    if not "!LB_COUNT!"=="0" (
+        echo ERROR: Found !LB_COUNT! lingering load balancer^(s^) for cluster %CLUSTER_NAME%.
+        echo Run aws-teardown-cluster.bat first to remove them.
+        exit /b 1
     )
 )
 

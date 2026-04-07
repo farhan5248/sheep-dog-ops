@@ -66,23 +66,35 @@ jobs:
         run: |
           aws eks update-kubeconfig --name "$CLUSTER_NAME" --region $REGION
 
-      - name: Delete Kubernetes resources (if cluster exists)
+      - name: Delete ingress-nginx namespace (releases the NLB)
         if: env.CLUSTER_NAME != ''
         run: |
-          kubectl delete -k kubernetes/complete/overlays/$NAMESPACE/ || echo "K8s resources may already be deleted."
+          kubectl delete namespace ingress-nginx --ignore-not-found=true --timeout=300s
 
-      - name: Wait for load balancers to be deleted
-        if: env.CLUSTER_NAME != ''
-        run: sleep 30
-
-      - name: Check for lingering load balancers
+      - name: Wait for cluster load balancers to be deleted
         if: env.CLUSTER_NAME != ''
         run: |
-          LB_NAMES=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?contains(LoadBalancerName, '$STACK_NAME')].LoadBalancerName" --output text)
-          if [ ! -z "$LB_NAMES" ]; then
-            echo "WARNING: Found lingering load balancers: $LB_NAMES"
-            echo "You may need to delete these manually before proceeding."
-          fi
+          for i in {1..30}; do
+            LB_COUNT=$(aws resourcegroupstaggingapi get-resources \
+              --resource-type-filters elasticloadbalancing:loadbalancer \
+              --tag-filters "Key=kubernetes.io/cluster/$CLUSTER_NAME,Values=owned" \
+              --query "length(ResourceTagMappingList)" \
+              --output text \
+              --region $REGION)
+            if [ "$LB_COUNT" = "0" ]; then
+              echo "All cluster load balancers deleted."
+              exit 0
+            fi
+            echo "Waiting for $LB_COUNT load balancer(s)... (attempt $i/30)"
+            sleep 10
+          done
+          echo "ERROR: Timed out waiting for load balancers to be deleted."
+          exit 1
+
+      - name: Delete Kubernetes app resources (if cluster exists)
+        if: env.CLUSTER_NAME != ''
+        run: |
+          kubectl delete -k kubernetes/complete/overlays/$NAMESPACE/ --ignore-not-found=true
 
       - name: Teardown completed
         run: echo "Teardown completed successfully!"

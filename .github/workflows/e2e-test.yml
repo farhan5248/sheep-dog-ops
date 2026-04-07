@@ -29,26 +29,9 @@ jobs:
 
   forward-engineer:
     needs: setup-cluster
-    runs-on: [farhan5248-runners]
-    permissions:
-      contents: read
-      packages: read
-    env:
-      HOST: ${{ needs.setup-cluster.outputs.service_url }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          overwrite-settings: false
-      - name: Forward engineer
-        working-directory: sheep-dog
-        run: |
-          mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="svc-maven-plugin" -Dhost="$HOST"
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+    uses: ./.github/workflows/forward-engineer.yml
+    with:
+      host: ${{ needs.setup-cluster.outputs.service_url }}
 
   teardown-cluster:
     needs: forward-engineer

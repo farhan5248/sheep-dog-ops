@@ -25,11 +25,8 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo --- Forward Engineer ---
-pushd ..
-call mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="svc-maven-plugin" -Dhost="%SERVICE_URL%"
-set FE_RESULT=%ERRORLEVEL%
-popd
-if %FE_RESULT% neq 0 (
+call forward-engineer.bat %SERVICE_URL%
+if %ERRORLEVEL% neq 0 (
     echo Forward engineer failed.
     exit /b 1
 )
