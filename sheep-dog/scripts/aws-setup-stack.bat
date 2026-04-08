@@ -32,11 +32,10 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-echo Checking if kustomize is installed...
-kubectl kustomize --help > nul 2>&1
+echo Checking if helm is installed...
+helm version --short > nul 2>&1
 if %ERRORLEVEL% neq 0 (
-    echo Kustomize functionality is not available. It should be included with kubectl v1.14+.
-    echo If you're using an older version, please install kustomize separately.
+    echo Helm is not installed. Install it and retry.
     exit /b 1
 )
 

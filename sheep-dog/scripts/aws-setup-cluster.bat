@@ -31,11 +31,10 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-echo Checking if kustomize is installed...
-kubectl kustomize --help > nul 2>&1
+echo Checking if helm is installed...
+helm version --short > nul 2>&1
 if %ERRORLEVEL% neq 0 (
-    echo Kustomize functionality is not available. It should be included with kubectl v1.14+.
-    echo If you're using an older version, please install kustomize separately.
+    echo Helm is not installed. Install it and retry.
     exit /b 1
 )
 
@@ -63,16 +62,12 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-echo Updating Kubernetes configuration...
-echo Creating namespace if it doesn't exist...
-kubectl create namespace %NAMESPACE% --dry-run=client -o yaml | kubectl apply -f -
-
-echo Applying Kustomize overlay...
+echo Deploying sheep-dog umbrella helm chart to namespace %NAMESPACE%...
 cd ..
-kubectl apply -k kubernetes/complete/overlays/%NAMESPACE%/
+helm upgrade --install sheep-dog helm/sheep-dog -n %NAMESPACE% --create-namespace -f helm/helm-values/values-%NAMESPACE%.yaml --wait
 
 if %ERRORLEVEL% neq 0 (
-    echo Failed to apply Kubernetes configuration.
+    echo Failed to deploy helm chart.
     exit /b 1
 )
 cd scripts

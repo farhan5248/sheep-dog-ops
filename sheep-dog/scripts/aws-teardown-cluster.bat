@@ -64,8 +64,8 @@ if not "%CLUSTER_NAME%"=="" (
     exit /b 1
     :lbs_deleted
 
-    echo Deleting Kubernetes app resources...
-    kubectl delete -k ../kubernetes/complete/overlays/%NAMESPACE%/ --ignore-not-found=true
+    echo Uninstalling sheep-dog umbrella helm release...
+    helm uninstall sheep-dog -n %NAMESPACE% --ignore-not-found
 )
 
 echo %time%
