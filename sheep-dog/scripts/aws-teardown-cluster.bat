@@ -43,29 +43,38 @@ if %ERRORLEVEL% neq 0 (
 echo Getting EKS cluster name...
 for /f "tokens=*" %%i in ('aws cloudformation describe-stacks --stack-name %STACK_NAME% --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" --output text --region %REGION%') do set CLUSTER_NAME=%%i
 
-if not "%CLUSTER_NAME%"=="" (
-    echo Configuring kubectl to connect to the EKS cluster...
-    aws eks update-kubeconfig --name %CLUSTER_NAME% --region %REGION%
+if "%CLUSTER_NAME%"=="" (
+    echo No cluster found in stack %STACK_NAME%, skipping k8s cleanup.
+    goto :done
+)
 
-    echo Deleting ingress-nginx namespace (releases the NLB)...
-    kubectl delete namespace ingress-nginx --ignore-not-found=true --timeout=300s
+echo Configuring kubectl to connect to the EKS cluster...
+aws eks update-kubeconfig --name %CLUSTER_NAME% --region %REGION%
 
-    echo Waiting for cluster load balancers to be deleted (up to 5 minutes)...
-    for /l %%i in (1,1,30) do (
-        for /f "delims=" %%c in ('aws resourcegroupstaggingapi get-resources --resource-type-filters elasticloadbalancing:loadbalancer --tag-filters "Key=kubernetes.io/cluster/%CLUSTER_NAME%,Values=owned" --query "length(ResourceTagMappingList)" --output text --region %REGION%') do set LB_COUNT=%%c
-        if "!LB_COUNT!"=="0" (
-            echo All cluster load balancers deleted.
-            goto :lbs_deleted
-        )
-        echo Waiting for !LB_COUNT! load balancer^(s^)... ^(attempt %%i/30^)
-        timeout /t 10 >nul
-    )
-    echo ERROR: Timed out waiting for load balancers to be deleted.
-    exit /b 1
-    :lbs_deleted
+echo Deleting ingress-nginx namespace ^(releases the NLB^)...
+kubectl delete namespace ingress-nginx --ignore-not-found=true --timeout=300s
 
-    echo Uninstalling sheep-dog umbrella helm release...
-    helm uninstall sheep-dog -n %NAMESPACE% --ignore-not-found
+echo Waiting for cluster load balancers to be deleted ^(up to 5 minutes^)...
+for /l %%i in (1,1,30) do (
+    for /f "delims=" %%c in ('aws resourcegroupstaggingapi get-resources --resource-type-filters elasticloadbalancing:loadbalancer --tag-filters "Key=kubernetes.io/cluster/%CLUSTER_NAME%,Values=owned" --query "length(ResourceTagMappingList)" --output text --region %REGION%') do set LB_COUNT=%%c
+    if "!LB_COUNT!"=="0" goto :lbs_deleted
+    echo Waiting for !LB_COUNT! load balancer^(s^)... ^(attempt %%i/30^)
+    timeout /t 10 >nul
+)
+echo ERROR: Timed out waiting for load balancers to be deleted.
+exit /b 1
+
+:lbs_deleted
+echo All cluster load balancers deleted.
+
+echo Uninstalling sheep-dog umbrella helm release...
+helm uninstall sheep-dog -n %NAMESPACE% --ignore-not-found
+
+:done
+echo Restoring kubectl context to minikube...
+kubectl config use-context minikube
+if %ERRORLEVEL% neq 0 (
+    echo WARNING: Failed to switch kubectl context back to minikube. Please restore manually.
 )
 
 echo %time%

@@ -103,5 +103,11 @@ kubectl get services -n %NAMESPACE%
 
 echo EKS cluster update completed successfully!
 
+echo Restoring kubectl context to minikube...
+kubectl config use-context minikube
+if %ERRORLEVEL% neq 0 (
+    echo WARNING: Failed to switch kubectl context back to minikube. Please restore manually.
+)
+
 echo %time%
 endlocal & set SERVICE_URL=%SERVICE_URL%

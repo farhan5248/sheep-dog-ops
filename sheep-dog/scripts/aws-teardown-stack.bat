@@ -99,4 +99,10 @@ if %ERRORLEVEL% neq 0 (
     echo CloudFormation stack deleted successfully!
 )
 
+echo Restoring kubectl context to minikube...
+kubectl config use-context minikube
+if %ERRORLEVEL% neq 0 (
+    echo WARNING: Failed to switch kubectl context back to minikube. Please restore manually.
+)
+
 echo %time%

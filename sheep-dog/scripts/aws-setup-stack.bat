@@ -153,4 +153,10 @@ kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.
 
 echo Deployment completed successfully!
 
+echo Restoring kubectl context to minikube...
+kubectl config use-context minikube
+if %ERRORLEVEL% neq 0 (
+    echo WARNING: Failed to switch kubectl context back to minikube. Please restore manually.
+)
+
 echo %time%
