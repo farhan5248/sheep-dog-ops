@@ -1,0 +1,12 @@
+# Prod environment overrides for the sheep-dog umbrella chart.
+# Deploy with:
+#   helm upgrade --install sheep-dog <chart-path> -n prod --create-namespace \
+#     -f helm-values/values-prod.yaml
+
+# No ingress.host set — the AWS ELB hostname is random per deploy and the
+# workflow connects to it directly (see aws-setup-cluster.bat). Leaving this
+# empty makes the ingress match any host header, which matches the prior
+# kustomize behavior.
+
+# AWS EKS uses the gp2 storage class for EBS-backed PVCs.
+pvcStorageClass: gp2

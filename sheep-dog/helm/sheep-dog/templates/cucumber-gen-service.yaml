@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sheep-dog-cucumber-gen-svc
+  labels:
+    app: sheep-dog
+    component: sheep-dog-cucumber-gen-svc
+spec:
+  selector:
+    component: sheep-dog-cucumber-gen-svc
+  ports:
+    - name: sheep-dog-cucumber-gen-svc
+      port: 80
+      targetPort: 8080
+  type: ClusterIP

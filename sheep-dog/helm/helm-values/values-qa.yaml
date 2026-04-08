@@ -1,0 +1,7 @@
+# QA environment overrides for the sheep-dog umbrella chart.
+# Deploy with:
+#   helm upgrade --install sheep-dog <chart-path> -n qa --create-namespace \
+#     -f helm-values/values-qa.yaml
+
+ingress:
+  host: qa.sheepdog.io

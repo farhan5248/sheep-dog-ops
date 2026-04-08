@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sheep-dog-asciidoc-api-svc
+  labels:
+    app: sheep-dog
+    component: sheep-dog-asciidoc-api-svc
+spec:
+  selector:
+    component: sheep-dog-asciidoc-api-svc
+  ports:
+    - name: sheep-dog-asciidoc-api-svc
+      port: 80
+      targetPort: 8080
+  type: ClusterIP

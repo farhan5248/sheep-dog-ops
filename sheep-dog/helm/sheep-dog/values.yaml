@@ -1,0 +1,45 @@
+# Default values for the sheep-dog umbrella chart.
+# Override per environment via helm-values/values-<env>.yaml and with --set.
+
+# Image coordinates. One block per service so individual mvn builds can override
+# just their own image tag via --set images.<svc>.tag=<version>.
+images:
+  db:
+    repository: ghcr.io/farhan5248/sheep-dog-dev-db
+    tag: latest
+    pullPolicy: IfNotPresent
+  amq:
+    repository: apache/activemq-artemis
+    tag: "2.41.0"
+    pullPolicy: IfNotPresent
+  asciidocApi:
+    repository: ghcr.io/farhan5248/sheep-dog-asciidoc-api-svc
+    tag: latest
+    pullPolicy: Always
+  cucumberGen:
+    repository: ghcr.io/farhan5248/sheep-dog-cucumber-gen-svc
+    tag: latest
+    pullPolicy: Always
+  mcp:
+    repository: ghcr.io/farhan5248/sheep-dog-mcp-svc
+    tag: latest
+    pullPolicy: Always
+
+# Ingress host for the sheep-dog ingress.
+# Set on dev/qa (local minikube with hosts file entries). Leave empty on prod
+# (AWS EKS) so the ingress matches any host header — the workflow talks directly
+# to the AWS ELB hostname, not prod.sheepdog.io.
+ingress:
+  host: ""
+
+# PVC storage class applied to all PVCs (db, asciidoc-api, cucumber-gen).
+# "standard" for minikube, "gp2" for AWS EKS.
+pvcStorageClass: standard
+
+# PVC sizes per component
+db:
+  pvcSize: 1Gi
+asciidocApi:
+  pvcSize: 1Gi
+cucumberGen:
+  pvcSize: 1Gi

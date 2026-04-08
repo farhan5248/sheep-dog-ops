@@ -25,7 +25,7 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo --- Forward Engineer ---
-call forward-engineer.bat %SERVICE_URL%
+call aws-forward-engineer.bat %SERVICE_URL%
 if %ERRORLEVEL% neq 0 (
     echo Forward engineer failed.
     exit /b 1

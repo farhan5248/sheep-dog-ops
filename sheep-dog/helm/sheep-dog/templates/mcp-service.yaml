@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sheep-dog-mcp-svc
+  labels:
+    app: sheep-dog
+    component: sheep-dog-mcp-svc
+spec:
+  selector:
+    component: sheep-dog-mcp-svc
+  ports:
+    - name: sheep-dog-mcp-svc
+      port: 80
+      targetPort: 8080
+  type: ClusterIP

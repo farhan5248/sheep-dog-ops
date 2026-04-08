@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sheep-dog-mcp-svc
+  labels:
+    app: sheep-dog
+    component: sheep-dog-mcp-svc
+spec:
+  selector:
+    matchLabels:
+      component: sheep-dog-mcp-svc
+  template:
+    metadata:
+      labels:
+        app: sheep-dog
+        component: sheep-dog-mcp-svc
+    spec:
+      containers:
+        - name: sheep-dog-mcp-svc
+          image: "{{ .Values.images.mcp.repository }}:{{ .Values.images.mcp.tag }}"
+          imagePullPolicy: {{ .Values.images.mcp.pullPolicy | quote }}
+          env:
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: LOG_PATH
+              value: "/logs"
+            - name: SHEEPDOG_ASCIIDOC_HOST
+              value: sheep-dog-asciidoc-api-svc
+            - name: SHEEPDOG_ASCIIDOC_PORT
+              value: "80"
+            - name: SHEEPDOG_CUCUMBER_HOST
+              value: sheep-dog-cucumber-gen-svc
+            - name: SHEEPDOG_CUCUMBER_PORT
+              value: "80"
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: logs-volume
+              mountPath: /logs
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+      volumes:
+        - name: logs-volume
+          emptyDir: {}

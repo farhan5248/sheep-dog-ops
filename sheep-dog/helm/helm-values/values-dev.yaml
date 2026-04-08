@@ -1,0 +1,7 @@
+# Dev environment overrides for the sheep-dog umbrella chart.
+# Deploy with:
+#   helm upgrade --install sheep-dog <chart-path> -n dev --create-namespace \
+#     -f helm-values/values-dev.yaml
+
+ingress:
+  host: dev.sheepdog.io
