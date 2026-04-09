@@ -17,6 +17,10 @@ REM Usage:
 REM   set NEXUS_ADMIN_PW=...
 REM   set NEXUS_DEPLOY_PW=...
 REM   configure.bat
+REM
+REM NOTE: avoid cmd metacharacters (^ & < > |) in the passwords — cmd's parser
+REM eats them during %VAR% expansion and the script will send a mangled value
+REM to Nexus.
 
 setlocal
 set NEXUS_URL=http://nexus.sheepdog.io
@@ -38,7 +42,7 @@ echo === 1. Enable Docker Bearer Token realm ===
 curl -u %ADMIN%:%NEXUS_ADMIN_PW% -X PUT "%NEXUS_URL%/service/rest/v1/security/realms/active" ^
     -H "Content-Type: application/json" ^
     -w "%CURL_FMT%" ^
-    -d "[\"NexusAuthenticatingRealm\",\"NexusAuthorizingRealm\",\"DockerToken\"]"
+    -d "[\"NexusAuthenticatingRealm\",\"DockerToken\"]"
 echo.
 
 echo === 2. Create helm-hosted docker repo ===
