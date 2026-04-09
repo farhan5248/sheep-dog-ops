@@ -31,11 +31,28 @@ if errorlevel 1 (
 
 echo === Configuring LAN exposure ===
 
-echo Removing any existing portproxy rule on 0.0.0.0:80...
-netsh interface portproxy delete v4tov4 listenport=80 listenaddress=0.0.0.0 >nul 2>&1
+REM Detect this machine's LAN IPv4 address. We bind the portproxy to this
+REM specific address (not 0.0.0.0) because 0.0.0.0:80 would collide with
+REM `minikube tunnel`'s 127.0.0.1:80 listener and prevent the tunnel from
+REM binding.
+for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /C:"IPv4 Address"') do (
+    set LAN_IP=%%a
+    goto :got_ip
+)
+:got_ip
+set LAN_IP=%LAN_IP: =%
+if "%LAN_IP%"=="" (
+    echo ERROR: could not detect LAN IP via ipconfig.
+    exit /b 1
+)
+echo Detected LAN IP: %LAN_IP%
 
-echo Adding portproxy: 0.0.0.0:80 -^> 127.0.0.1:80...
-netsh interface portproxy add v4tov4 listenport=80 listenaddress=0.0.0.0 connectport=80 connectaddress=127.0.0.1
+echo Removing any existing portproxy rules on port 80...
+netsh interface portproxy delete v4tov4 listenport=80 listenaddress=0.0.0.0 >nul 2>&1
+netsh interface portproxy delete v4tov4 listenport=80 listenaddress=%LAN_IP% >nul 2>&1
+
+echo Adding portproxy: %LAN_IP%:80 -^> 127.0.0.1:80...
+netsh interface portproxy add v4tov4 listenport=80 listenaddress=%LAN_IP% connectport=80 connectaddress=127.0.0.1
 if errorlevel 1 (
     echo ERROR: failed to add portproxy rule.
     exit /b 1
