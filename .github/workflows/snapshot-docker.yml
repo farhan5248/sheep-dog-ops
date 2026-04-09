@@ -26,21 +26,8 @@ jobs:
       contents: read
       packages: write
     steps:
-    # Checkout the calling repo (sheep-dog-svc) into a subdirectory so that
-    # sheep-dog-ops can be checked out as a sibling. This matches the local
-    # dev machine layout where sheep-dog-main hosts both as submodules,
-    # allowing the service pom's relative path to the helm chart to resolve.
-    # TODO: remove the sheep-dog-ops checkout once the umbrella helm chart
-    # is hosted in Nexus (see #82) and the service poms pull by version.
-    - name: Checkout calling repo
+    - name: Checkout
       uses: actions/checkout@v4
-      with:
-        path: sheep-dog-svc
-    - name: Checkout sheep-dog-ops (for helm chart)
-      uses: actions/checkout@v4
-      with:
-        repository: farhan5248/sheep-dog-ops
-        path: sheep-dog-ops
     - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
@@ -48,7 +35,7 @@ jobs:
         distribution: 'temurin'
         overwrite-settings: false
     - name: Run Maven
-      working-directory: ./sheep-dog-svc/${{ inputs.project }}
+      working-directory: ./${{ inputs.project }}
       run: |
         mvn -U deploy "-Dsheepdog.namespace=dev"
       env:

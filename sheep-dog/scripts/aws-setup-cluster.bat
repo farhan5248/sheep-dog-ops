@@ -62,20 +62,29 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-echo Deploying sheep-dog umbrella helm chart to namespace %NAMESPACE%...
-cd ..
-REM Pulls the chart from Nexus OCI (#82). Chart version pinned to 0.1.0 until #32.
+echo Pulling sheep-dog umbrella helm chart from Nexus OCI (#82)...
+REM Chart version pinned to 0.1.0 until #32. Chart ships its own env values
+REM files under helm-values/, so we pull-untar to target/ and reference
+REM the extracted values file by namespace.
 REM Prereqs on windows-minipc (where this is run manually):
 REM   - hosts file has nexus-docker.sheepdog.io
 REM   - `helm registry login nexus-docker.sheepdog.io --plain-http` already done
-REM   - minikube_start_server.bat running on windows-desktop (so Nexus is reachable)
-helm upgrade --install sheep-dog oci://nexus-docker.sheepdog.io/helm-hosted/sheep-dog --version 0.1.0 --plain-http -n %NAMESPACE% --create-namespace -f helm/helm-values/values-%NAMESPACE%.yaml --wait
+REM   - minikube_start_server.bat running on windows-desktop
+if not exist ..\target mkdir ..\target
+if exist ..\target\sheep-dog rmdir /s /q ..\target\sheep-dog
+helm pull oci://nexus-docker.sheepdog.io/helm-hosted/sheep-dog --version 0.1.0 --plain-http --untar --untardir ..\target
+if %ERRORLEVEL% neq 0 (
+    echo Failed to pull helm chart.
+    exit /b 1
+)
+
+echo Deploying sheep-dog umbrella helm chart to namespace %NAMESPACE%...
+helm upgrade --install sheep-dog ..\target\sheep-dog -n %NAMESPACE% --create-namespace -f ..\target\sheep-dog\helm-values\values-%NAMESPACE%.yaml --wait
 
 if %ERRORLEVEL% neq 0 (
     echo Failed to deploy helm chart.
     exit /b 1
 )
-cd scripts
 
 echo Restarting deployments to pull the latest images...
 kubectl rollout restart deployment -n %NAMESPACE% -l app=sheep-dog
