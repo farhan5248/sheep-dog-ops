@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 echo %time%
-echo Updating EKS cluster with new Docker image or Kubernetes configuration changes
+echo Deploying sheep-dog umbrella helm chart into an EKS namespace
 
 set SUFFIX=%1
 set NAMESPACE=%2
@@ -9,8 +9,8 @@ set BASE_STACK_NAME=sheep-dog-aws
 set REGION=us-east-1
 
 if "%SUFFIX%"=="" (
-    echo Usage: aws-setup-cluster.bat [suffix] [namespace]
-    echo Example: aws-setup-cluster.bat 1 prod
+    echo Usage: aws-setup-namespace.bat [suffix] [namespace]
+    echo Example: aws-setup-namespace.bat 1 prod
     exit /b 1
 )
 set STACK_NAME=%BASE_STACK_NAME%-%SUFFIX%
@@ -50,7 +50,7 @@ for /f "tokens=*" %%i in ('aws cloudformation describe-stacks --stack-name %STAC
 
 if "%CLUSTER_NAME%"=="" (
     echo Failed to get EKS cluster name from CloudFormation stack.
-    echo Make sure the stack %STACK_NAME% exists and has been deployed using aws-setup-stack.bat.
+    echo Make sure the stack %STACK_NAME% exists and has been deployed using aws-setup-eks.bat.
     exit /b 1
 )
 
@@ -70,16 +70,20 @@ REM Prereqs on windows-minipc (where this is run manually):
 REM   - hosts file has nexus-docker.sheepdog.io
 REM   - `helm registry login nexus-docker.sheepdog.io --plain-http` already done
 REM   - minikube_start_server.bat running on windows-desktop
-if not exist ..\target mkdir ..\target
-if exist ..\target\sheep-dog rmdir /s /q ..\target\sheep-dog
-helm pull oci://nexus-docker.sheepdog.io/helm-hosted/sheep-dog --version 0.1.0 --plain-http --untar --untardir ..\target
+REM
+REM Resolve to an absolute path — helm install refuses chart paths containing
+REM `..` components (SecureJoin rejects upward traversal).
+for %%I in ("%~dp0..\target") do set TARGET_DIR=%%~fI
+if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
+if exist "%TARGET_DIR%\sheep-dog" rmdir /s /q "%TARGET_DIR%\sheep-dog"
+helm pull oci://nexus-docker.sheepdog.io/helm-hosted/sheep-dog --version 0.1.0 --plain-http --untar --untardir "%TARGET_DIR%"
 if %ERRORLEVEL% neq 0 (
     echo Failed to pull helm chart.
     exit /b 1
 )
 
 echo Deploying sheep-dog umbrella helm chart to namespace %NAMESPACE%...
-helm upgrade --install sheep-dog ..\target\sheep-dog -n %NAMESPACE% --create-namespace -f ..\target\sheep-dog\helm-values\values-%NAMESPACE%.yaml --wait
+helm upgrade --install sheep-dog "%TARGET_DIR%\sheep-dog" -n %NAMESPACE% --create-namespace -f "%TARGET_DIR%\sheep-dog\helm-values\values-%NAMESPACE%.yaml" --wait
 
 if %ERRORLEVEL% neq 0 (
     echo Failed to deploy helm chart.

@@ -10,17 +10,17 @@ if "%SUFFIX%"=="" (
     exit /b 1
 )
 
-echo --- Setup Stack ---
-call aws-setup-stack.bat %SUFFIX%
+echo --- Setup EKS ---
+call aws-setup-eks.bat %SUFFIX%
 if %ERRORLEVEL% neq 0 (
-    echo Setup stack failed.
+    echo Setup eks failed.
     exit /b 1
 )
 
-echo --- Setup Cluster ---
-call aws-setup-cluster.bat %SUFFIX% prod
+echo --- Setup Namespace ---
+call aws-setup-namespace.bat %SUFFIX% prod
 if %ERRORLEVEL% neq 0 (
-    echo Setup cluster failed.
+    echo Setup namespace failed.
     exit /b 1
 )
 
@@ -31,17 +31,17 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-echo --- Teardown Cluster ---
-call aws-teardown-cluster.bat %SUFFIX%
+echo --- Teardown Namespace ---
+call aws-teardown-namespace.bat %SUFFIX%
 if %ERRORLEVEL% neq 0 (
-    echo Teardown cluster failed.
+    echo Teardown namespace failed.
     exit /b 1
 )
 
-echo --- Teardown Stack ---
-call aws-teardown-stack.bat %SUFFIX%
+echo --- Teardown EKS ---
+call aws-teardown-eks.bat %SUFFIX%
 if %ERRORLEVEL% neq 0 (
-    echo Teardown stack failed.
+    echo Teardown eks failed.
     exit /b 1
 )
 

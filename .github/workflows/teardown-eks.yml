@@ -1,4 +1,4 @@
-name: Teardown Cluster
+name: Teardown EKS
 
 on:
   workflow_call:
@@ -12,6 +12,8 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
+      AWS_ACCOUNT_ID:
+        required: true
   workflow_dispatch:
     inputs:
       suffix:
@@ -20,15 +22,12 @@ on:
         default: '1'
 
 jobs:
-  teardown-k8s:
+  teardown-eks:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: sheep-dog
     env:
       BASE_STACK_NAME: sheep-dog-aws
       REGION: us-east-1
-      NAMESPACE: prod
+      ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
 
     steps:
       - name: Checkout repository
@@ -40,11 +39,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.REGION }}
-
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v4
-        with:
-          version: 'latest'
 
       - name: Set stack name
         id: stack
@@ -66,6 +60,10 @@ jobs:
         run: |
           aws eks update-kubeconfig --name "$CLUSTER_NAME" --region $REGION
 
+      # ingress-nginx and its NLB are owned by the EKS layer (setup-eks
+      # installs them, teardown-eks removes them). Namespace teardown only
+      # removes the sheep-dog helm release — teardown-namespace +
+      # setup-namespace is a valid redeploy loop that keeps the NLB alive.
       - name: Delete ingress-nginx namespace (releases the NLB)
         if: env.CLUSTER_NAME != ''
         run: |
@@ -91,10 +89,32 @@ jobs:
           echo "ERROR: Timed out waiting for load balancers to be deleted."
           exit 1
 
-      - name: Delete Kubernetes app resources (if cluster exists)
-        if: env.CLUSTER_NAME != ''
+      - name: Delete EBS CSI driver IAM policy and role
         run: |
-          kubectl delete -k kubernetes/complete/overlays/$NAMESPACE/ --ignore-not-found=true
+          ROLE_NAME=EBSCSIDriverRole
+          aws iam detach-role-policy --role-name $ROLE_NAME --policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy || echo "Policy may already be detached."
+          aws iam delete-role --role-name $ROLE_NAME || echo "Role may already be deleted."
+
+      - name: Get OIDC URL from EKS cluster
+        id: oidc
+        run: |
+          OIDC_URL=$(aws eks describe-cluster --name "$CLUSTER_NAME" --query "cluster.identity.oidc.issuer" --output text)
+          if [ -z "$OIDC_URL" ]; then
+            echo "Failed to get OIDC URL from EKS Cluster."
+            exit 1
+          fi
+          OIDC_PROVIDER_ID=$(basename "$OIDC_URL")
+          echo "OIDC_PROVIDER_ID=$OIDC_PROVIDER_ID" >> $GITHUB_ENV
+
+      - name: Delete OIDC provider
+        run: |
+          aws iam delete-open-id-connect-provider --open-id-connect-provider-arn arn:aws:iam::${ACCOUNT_ID}:oidc-provider/oidc.eks.${REGION}.amazonaws.com/id/${OIDC_PROVIDER_ID} || echo "OIDC provider may already be deleted."
+
+      - name: Delete CloudFormation stack
+        run: |
+          aws cloudformation delete-stack --stack-name "$STACK_NAME" --region $REGION
+          echo "Waiting for stack deletion to complete..."
+          aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME" --region $REGION
 
       - name: Teardown completed
         run: echo "Teardown completed successfully!"

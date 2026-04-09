@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 echo %time%
-echo Deploying Spring Boot service to AWS EKS
+echo Creating AWS EKS cluster (CloudFormation + OIDC + EBS CSI + ingress-nginx)
 
 set SUFFIX=%1
 set BASE_STACK_NAME=sheep-dog-aws
@@ -9,8 +9,8 @@ set REGION=us-east-1
 set ACCOUNT_ID=013372624673
 
 if "%SUFFIX%"=="" (
-    echo Usage: aws-setup-stack.bat [suffix]
-    echo Example with suffix: aws-setup-stack.bat 1
+    echo Usage: aws-setup-eks.bat [suffix]
+    echo Example with suffix: aws-setup-eks.bat 1
     exit /b 1
 ) else (
     set STACK_NAME=%BASE_STACK_NAME%-%SUFFIX%

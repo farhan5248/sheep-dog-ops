@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 echo %time%
-echo Tearing down AWS CloudFormation stack
+echo Tearing down AWS EKS cluster (ingress-nginx + CloudFormation stack)
 
 set SUFFIX=%1
 set BASE_STACK_NAME=sheep-dog-aws
@@ -9,8 +9,8 @@ set REGION=us-east-1
 set ACCOUNT_ID=013372624673
 
 if "%SUFFIX%"=="" (
-    echo Usage: aws-teardown-stack.bat [suffix]
-    echo Example with suffix: aws-teardown-stack.bat 1
+    echo Usage: aws-teardown-eks.bat [suffix]
+    echo Example with suffix: aws-teardown-eks.bat 1
     exit /b 1
 ) else (
     set STACK_NAME=%BASE_STACK_NAME%-%SUFFIX%
@@ -43,12 +43,33 @@ if %ERRORLEVEL% neq 0 (
 echo Getting EKS cluster name...
 for /f "tokens=*" %%i in ('aws cloudformation describe-stacks --stack-name %STACK_NAME% --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" --output text --region %REGION%') do set CLUSTER_NAME=%%i
 
+REM ingress-nginx and its NLB are owned by the EKS layer (setup-eks installs
+REM them, teardown-eks removes them). Namespace teardown only removes the
+REM sheep-dog helm release, so teardown-namespace + setup-namespace is a
+REM valid redeploy loop that keeps the NLB alive.
 if not "%CLUSTER_NAME%"=="" (
-    echo Checking for lingering cluster load balancers...
-    for /f "delims=" %%c in ('aws resourcegroupstaggingapi get-resources --resource-type-filters elasticloadbalancing:loadbalancer --tag-filters "Key=kubernetes.io/cluster/%CLUSTER_NAME%,Values=owned" --query "length(ResourceTagMappingList)" --output text --region %REGION%') do set LB_COUNT=%%c
-    if not "!LB_COUNT!"=="0" (
-        echo ERROR: Found !LB_COUNT! lingering load balancer^(s^) for cluster %CLUSTER_NAME%.
-        echo Run aws-teardown-cluster.bat first to remove them.
+    echo Configuring kubectl to connect to the EKS cluster...
+    aws eks update-kubeconfig --name %CLUSTER_NAME% --region %REGION%
+
+    echo Deleting ingress-nginx namespace ^(releases the NLB^)...
+    kubectl delete namespace ingress-nginx --ignore-not-found=true --timeout=300s
+
+    echo Waiting for cluster load balancers to be deleted ^(up to 5 minutes^)...
+    set LB_DELETED=0
+    for /l %%i in (1,1,30) do (
+        if "!LB_DELETED!"=="0" (
+            for /f "delims=" %%c in ('aws resourcegroupstaggingapi get-resources --resource-type-filters elasticloadbalancing:loadbalancer --tag-filters "Key=kubernetes.io/cluster/%CLUSTER_NAME%,Values=owned" --query "length(ResourceTagMappingList)" --output text --region %REGION%') do set LB_COUNT=%%c
+            if "!LB_COUNT!"=="0" (
+                set LB_DELETED=1
+                echo All cluster load balancers deleted.
+            ) else (
+                echo Waiting for !LB_COUNT! load balancer^(s^)... ^(attempt %%i/30^)
+                timeout /t 10 >nul
+            )
+        )
+    )
+    if "!LB_DELETED!"=="0" (
+        echo ERROR: Timed out waiting for load balancers to be deleted.
         exit /b 1
     )
 )

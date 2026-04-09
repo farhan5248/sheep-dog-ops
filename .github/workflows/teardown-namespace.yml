@@ -1,0 +1,73 @@
+name: Teardown Namespace
+
+on:
+  workflow_call:
+    inputs:
+      suffix:
+        description: 'Suffix for the stack name'
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+  workflow_dispatch:
+    inputs:
+      suffix:
+        description: 'Suffix for the stack name'
+        required: true
+        default: '1'
+
+jobs:
+  teardown-k8s:
+    # Self-hosted runner to stay consistent with setup-namespace.yml — same
+    # reasoning applies (Nexus LAN access, no kustomize dependency).
+    runs-on: [self-hosted, farhan5248-runners, linux]
+    env:
+      BASE_STACK_NAME: sheep-dog-aws
+      REGION: us-east-1
+      NAMESPACE: prod
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+
+      - name: Set stack name
+        id: stack
+        run: |
+          echo "STACK_NAME=${BASE_STACK_NAME}-${{ inputs.suffix }}" >> $GITHUB_ENV
+
+      - name: Get EKS cluster name
+        id: cluster
+        run: |
+          CLUSTER_NAME=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" \
+            --output text \
+            --region $REGION)
+          echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
+
+      - name: Update kubeconfig (if cluster exists)
+        if: env.CLUSTER_NAME != ''
+        run: |
+          aws eks update-kubeconfig --name "$CLUSTER_NAME" --region $REGION
+
+      # ingress-nginx and its NLB are owned by the EKS layer (setup-eks
+      # installs them, teardown-eks removes them). Namespace teardown only
+      # removes the sheep-dog helm release — teardown-namespace +
+      # setup-namespace is a valid redeploy loop that keeps the NLB alive.
+      - name: Uninstall sheep-dog helm release (if cluster exists)
+        if: env.CLUSTER_NAME != ''
+        run: |
+          helm uninstall sheep-dog -n $NAMESPACE --ignore-not-found
+
+      - name: Teardown completed
+        run: echo "Teardown completed successfully!"

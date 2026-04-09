@@ -4,7 +4,7 @@
 #     -f helm-values/values-prod.yaml
 
 # No ingress.host set — the AWS ELB hostname is random per deploy and the
-# workflow connects to it directly (see aws-setup-cluster.bat). Leaving this
+# workflow connects to it directly (see aws-setup-namespace.bat). Leaving this
 # empty makes the ingress match any host header, which matches the prior
 # kustomize behavior.
 
