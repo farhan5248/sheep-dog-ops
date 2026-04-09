@@ -1,0 +1,23 @@
+# Static PV backed by the hostPath bind-mount at /mnt/nexus in the minikube container,
+# which maps to D:\minikube-data\nexus on the windows-desktop host. This survives
+# `minikube delete` because the host directory is untouched when the container is removed.
+#
+# The stevehipwell/nexus3 chart's StatefulSet creates its own PVC via volumeClaimTemplates
+# with storageClassName=nexus-hostpath. That PVC binds to this PV automatically because
+# the storage class, size, and access mode all match.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nexus-data-pv
+  labels:
+    app: nexus
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nexus-hostpath
+  hostPath:
+    path: /mnt/nexus
+    type: DirectoryOrCreate

@@ -1,0 +1,39 @@
+# Values for the stevehipwell/nexus3 helm chart.
+# Chart repo: https://stevehipwell.github.io/helm-charts/
+# Chart:      stevehipwell/nexus3
+#
+# The chart uses a StatefulSet with volumeClaimTemplates. It creates a PVC with
+# storageClassName=nexus-hostpath which binds to the static PV at
+# sheep-dog-ops/nexus/pv.yaml (hostPath /mnt/nexus -> D:\minikube-data\nexus).
+
+# Tune JVM for the 12 GB minikube host (chart default is already Xmx1024m + 2g direct).
+# Override via the dedicated chart key (NOT env, which would duplicate).
+install4jAddVmParams: "-Xms1200m -Xmx1200m -XX:MaxDirectMemorySize=2g -Djava.util.prefs.userRoot=/nexus-data/javaprefs"
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 2Gi
+  limits:
+    cpu: "2"
+    memory: 3Gi
+
+service:
+  type: ClusterIP
+  port: 8081
+
+persistence:
+  enabled: true
+  storageClass: nexus-hostpath
+  accessMode: ReadWriteOnce
+  size: 20Gi
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hosts:
+    - nexus.sheepdog.io
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
