@@ -64,7 +64,12 @@ if %ERRORLEVEL% neq 0 (
 
 echo Deploying sheep-dog umbrella helm chart to namespace %NAMESPACE%...
 cd ..
-helm upgrade --install sheep-dog helm/sheep-dog -n %NAMESPACE% --create-namespace -f helm/helm-values/values-%NAMESPACE%.yaml --wait
+REM Pulls the chart from Nexus OCI (#82). Chart version pinned to 0.1.0 until #32.
+REM Prereqs on windows-minipc (where this is run manually):
+REM   - hosts file has nexus-docker.sheepdog.io
+REM   - `helm registry login nexus-docker.sheepdog.io --plain-http` already done
+REM   - minikube_start_server.bat running on windows-desktop (so Nexus is reachable)
+helm upgrade --install sheep-dog oci://nexus-docker.sheepdog.io/helm-hosted/sheep-dog --version 0.1.0 --plain-http -n %NAMESPACE% --create-namespace -f helm/helm-values/values-%NAMESPACE%.yaml --wait
 
 if %ERRORLEVEL% neq 0 (
     echo Failed to deploy helm chart.
