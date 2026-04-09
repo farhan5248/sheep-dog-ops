@@ -31,27 +31,34 @@ if "%NEXUS_DEPLOY_PW%"=="" (
     exit /b 1
 )
 
+REM -w prints HTTP status on its own line so we can spot failures.
+set CURL_FMT=\n--- HTTP %%{http_code} ---\n
+
 echo === 1. Enable Docker Bearer Token realm ===
-curl -s -u %ADMIN%:%NEXUS_ADMIN_PW% -X PUT "%NEXUS_URL%/service/rest/v1/security/realms/active" ^
+curl -u %ADMIN%:%NEXUS_ADMIN_PW% -X PUT "%NEXUS_URL%/service/rest/v1/security/realms/active" ^
     -H "Content-Type: application/json" ^
+    -w "%CURL_FMT%" ^
     -d "[\"NexusAuthenticatingRealm\",\"NexusAuthorizingRealm\",\"DockerToken\"]"
 echo.
 
 echo === 2. Create helm-hosted docker repo ===
-curl -s -u %ADMIN%:%NEXUS_ADMIN_PW% -X POST "%NEXUS_URL%/service/rest/v1/repositories/docker/hosted" ^
+curl -u %ADMIN%:%NEXUS_ADMIN_PW% -X POST "%NEXUS_URL%/service/rest/v1/repositories/docker/hosted" ^
     -H "Content-Type: application/json" ^
+    -w "%CURL_FMT%" ^
     -d "{\"name\":\"helm-hosted\",\"online\":true,\"storage\":{\"blobStoreName\":\"default\",\"strictContentTypeValidation\":true,\"writePolicy\":\"allow\"},\"docker\":{\"v1Enabled\":false,\"forceBasicAuth\":false,\"httpPort\":8082}}"
 echo.
 
 echo === 3. Create nx-helm-deployer role ===
-curl -s -u %ADMIN%:%NEXUS_ADMIN_PW% -X POST "%NEXUS_URL%/service/rest/v1/security/roles" ^
+curl -u %ADMIN%:%NEXUS_ADMIN_PW% -X POST "%NEXUS_URL%/service/rest/v1/security/roles" ^
     -H "Content-Type: application/json" ^
+    -w "%CURL_FMT%" ^
     -d "{\"id\":\"nx-helm-deployer\",\"name\":\"nx-helm-deployer\",\"description\":\"Push/pull OCI helm charts to helm-hosted\",\"privileges\":[\"nx-repository-view-docker-helm-hosted-*\"],\"roles\":[]}"
 echo.
 
 echo === 4. Create helm-deployer user ===
-curl -s -u %ADMIN%:%NEXUS_ADMIN_PW% -X POST "%NEXUS_URL%/service/rest/v1/security/users" ^
+curl -u %ADMIN%:%NEXUS_ADMIN_PW% -X POST "%NEXUS_URL%/service/rest/v1/security/users" ^
     -H "Content-Type: application/json" ^
+    -w "%CURL_FMT%" ^
     -d "{\"userId\":\"helm-deployer\",\"firstName\":\"Helm\",\"lastName\":\"Deployer\",\"emailAddress\":\"helm-deployer@sheepdog.local\",\"password\":\"%NEXUS_DEPLOY_PW%\",\"status\":\"active\",\"roles\":[\"nx-helm-deployer\"]}"
 echo.
 
