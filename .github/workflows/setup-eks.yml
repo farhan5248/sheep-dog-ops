@@ -24,6 +24,9 @@ on:
 jobs:
   setup-eks:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sheep-dog
     env:
       BASE_STACK_NAME: sheep-dog-aws
       REGION: us-east-1
