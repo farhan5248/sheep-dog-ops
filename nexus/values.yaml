@@ -21,6 +21,15 @@ resources:
 service:
   type: ClusterIP
   port: 8081
+  # Docker connector port used by the helm-hosted OCI repo in Nexus.
+  # Nexus's Docker API serves /v2/ at the root of whatever hostname resolves
+  # to this port, so we give it its own hostname (nexus-docker.sheepdog.io).
+  additionalPorts:
+    - port: 8082
+      name: docker-hosted
+      containerPort: 8082
+      hosts:
+        - nexus-docker.sheepdog.io
 
 persistence:
   enabled: true
