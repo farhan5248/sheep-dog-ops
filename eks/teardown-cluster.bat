@@ -9,8 +9,8 @@ set REGION=us-east-1
 set ACCOUNT_ID=013372624673
 
 if "%SUFFIX%"=="" (
-    echo Usage: aws-teardown-eks.bat [suffix]
-    echo Example with suffix: aws-teardown-eks.bat 1
+    echo Usage: teardown-cluster.bat [suffix]
+    echo Example with suffix: teardown-cluster.bat 1
     exit /b 1
 ) else (
     set STACK_NAME=%BASE_STACK_NAME%-%SUFFIX%

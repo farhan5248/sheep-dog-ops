@@ -28,6 +28,10 @@ spec:
               value: "/logs"
             - name: SPRING_DATASOURCE_URL
               value: jdbc:mysql://sheep-dog-db:3306/mbt
+            - name: SPRING_DATASOURCE_USERNAME
+              value: mbt
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: mbt
             - name: SPRING_ARTEMIS_HOST
               value: sheep-dog-amq
             - name: SPRING_ARTEMIS_PORT

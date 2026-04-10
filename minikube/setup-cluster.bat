@@ -1,14 +1,14 @@
 @echo off
-REM Wrapper around minikube_start.bat for machines that host services for the
-REM whole LAN (e.g. windows-desktop running Nexus). Exposes the ingress ports
-REM (80 + 443) via netsh portproxy so other machines on the LAN can reach
-REM them, THEN hands off to the base script (which ends with a foreground
-REM `minikube tunnel`).
+REM Wrapper around setup-cluster-local.bat for machines that host services
+REM for the whole LAN (e.g. windows-desktop running Nexus). Exposes the
+REM ingress ports (80 + 443) via netsh portproxy so other machines on the
+REM LAN can reach them, THEN hands off to the base script (which ends with
+REM a foreground `minikube tunnel`).
 REM
 REM Why portproxy setup comes FIRST:
-REM   minikube_start.bat ends with `minikube tunnel` as a foreground process,
-REM   so anything after the `call` never runs. We configure exposure before
-REM   the call.
+REM   setup-cluster-local.bat ends with `minikube tunnel` as a foreground
+REM   process, so anything after the `call` never runs. We configure
+REM   exposure before the call.
 REM
 REM Why this is needed at all:
 REM   `minikube tunnel` only binds to 127.0.0.1, so the minikube ingress is
@@ -21,7 +21,7 @@ REM   - Must be run as Administrator (portproxy + firewall rules are privileged)
 REM   - Only run on machines that intentionally serve the LAN
 REM
 REM Usage:
-REM   Run as admin: minikube_start_server.bat
+REM   Run as admin: setup-cluster.bat
 
 REM Check for admin. fltmc.exe requires admin; it's a reliable probe.
 fltmc >nul 2>&1
@@ -91,4 +91,4 @@ echo     netsh advfirewall firewall show rule name="Nexus ingress :443"
 echo.
 
 echo === Starting minikube ^(base script^) ===
-call "%~dp0minikube_start.bat"
+call "%~dp0setup-cluster-local.bat"

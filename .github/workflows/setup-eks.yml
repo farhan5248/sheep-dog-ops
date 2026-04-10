@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: sheep-dog
+        working-directory: eks
     env:
       BASE_STACK_NAME: sheep-dog-aws
       REGION: us-east-1
@@ -51,7 +51,7 @@ jobs:
       - name: Deploy CloudFormation stack for EKS
         run: |
           aws cloudformation deploy \
-            --template-file aws/eks.yml \
+            --template-file eks.yml \
             --stack-name "$STACK_NAME" \
             --capabilities CAPABILITY_IAM \
             --region $REGION
@@ -85,7 +85,7 @@ jobs:
       - name: Update trust policy file with OIDC provider ID and account ID
         run: |
           mkdir -p target
-          sed "s/OIDC_PROVIDER_ID/$OIDC_PROVIDER_ID/g; s/ACCOUNT_ID/$ACCOUNT_ID/g" aws/oidc-policy.json > target/oidc-policy.json
+          sed "s/OIDC_PROVIDER_ID/$OIDC_PROVIDER_ID/g; s/ACCOUNT_ID/$ACCOUNT_ID/g" oidc-policy.json > target/oidc-policy.json
 
       - name: Create IAM role for EBS CSI driver
         run: |

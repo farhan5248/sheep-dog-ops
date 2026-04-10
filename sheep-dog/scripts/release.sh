@@ -14,7 +14,7 @@
 #   - minikube tunnel running on windows-desktop
 #
 # Usage:
-#   ./release-chart.sh
+#   ./release.sh
 
 set -euo pipefail
 

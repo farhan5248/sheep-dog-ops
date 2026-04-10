@@ -60,14 +60,12 @@ jobs:
         run: |
           aws eks update-kubeconfig --name "$CLUSTER_NAME" --region $REGION
 
-      # ingress-nginx and its NLB are owned by the EKS layer (setup-eks
-      # installs them, teardown-eks removes them). Namespace teardown only
-      # removes the sheep-dog helm release — teardown-namespace +
-      # setup-namespace is a valid redeploy loop that keeps the NLB alive.
-      - name: Uninstall sheep-dog helm release (if cluster exists)
+      # The helm work is delegated to the distribution-agnostic script so
+      # local runs and CI share the same code path. The EKS-connect steps
+      # above are CI-only and stay in the workflow.
+      - name: Run teardown-namespace.sh (if cluster exists)
         if: env.CLUSTER_NAME != ''
-        run: |
-          helm uninstall sheep-dog -n $NAMESPACE --ignore-not-found
+        run: bash sheep-dog/scripts/teardown-namespace.sh "$NAMESPACE"
 
       - name: Teardown completed
         run: echo "Teardown completed successfully!"

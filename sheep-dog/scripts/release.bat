@@ -15,7 +15,7 @@ REM   - mkcert root CA trusted on this machine (see nexus/import-rootCA.bat)
 REM   - minikube tunnel running on windows-desktop
 REM
 REM Usage:
-REM   release-chart.bat
+REM   release.bat
 
 setlocal
 set CHART_DIR=%~dp0..\helm\sheep-dog

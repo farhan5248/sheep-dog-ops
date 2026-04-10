@@ -9,8 +9,8 @@ set REGION=us-east-1
 set ACCOUNT_ID=013372624673
 
 if "%SUFFIX%"=="" (
-    echo Usage: aws-setup-eks.bat [suffix]
-    echo Example with suffix: aws-setup-eks.bat 1
+    echo Usage: setup-cluster.bat [suffix]
+    echo Example with suffix: setup-cluster.bat 1
     exit /b 1
 ) else (
     set STACK_NAME=%BASE_STACK_NAME%-%SUFFIX%
@@ -48,7 +48,7 @@ if %ERRORLEVEL% neq 0 (
 
 echo Deploying CloudFormation stack for EKS...
 aws cloudformation deploy ^
-    --template-file ../aws/eks.yml ^
+    --template-file "%~dp0eks.yml" ^
     --stack-name %STACK_NAME% ^
     --capabilities CAPABILITY_IAM ^
     --region %REGION%
@@ -86,19 +86,16 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo Updating trust policy file with OIDC provider ID and account ID...
-cd ..
-mkdir target 2>nul
-powershell -Command "(Get-Content aws\oidc-policy.json) -replace 'OIDC_PROVIDER_ID', '%OIDC_PROVIDER_ID%' | Set-Content target\oidc-policy.json"
-powershell -Command "(Get-Content target\oidc-policy.json) -replace 'ACCOUNT_ID', '%ACCOUNT_ID%' | Set-Content target\oidc-policy.json"
+if not exist "%~dp0target" mkdir "%~dp0target"
+powershell -Command "(Get-Content '%~dp0oidc-policy.json') -replace 'OIDC_PROVIDER_ID', '%OIDC_PROVIDER_ID%' | Set-Content '%~dp0target\oidc-policy.json'"
+powershell -Command "(Get-Content '%~dp0target\oidc-policy.json') -replace 'ACCOUNT_ID', '%ACCOUNT_ID%' | Set-Content '%~dp0target\oidc-policy.json'"
 
 echo Creating IAM role for EBS CSI driver...
-aws iam create-role --role-name EBSCSIDriverRole --assume-role-policy-document file://target/oidc-policy.json
+aws iam create-role --role-name EBSCSIDriverRole --assume-role-policy-document "file://%~dp0target\oidc-policy.json"
 if %ERRORLEVEL% neq 0 (
     echo Couldn't create IAM role for EBS CSI driver.
     exit /b 1
 )
-
-cd scripts
 
 echo Attaching AmazonEBSCSIDriverPolicy to the role...
 aws iam attach-role-policy --role-name EBSCSIDriverRole --policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy
@@ -152,11 +149,10 @@ echo Waiting for nginx-ingress-controller to be ready...
 kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=300s
 
 echo Deployment completed successfully!
-
-echo Restoring kubectl context to minikube...
-kubectl config use-context minikube
-if %ERRORLEVEL% neq 0 (
-    echo WARNING: Failed to switch kubectl context back to minikube. Please restore manually.
-)
+echo.
+echo kubectl context is now pointing at the EKS cluster. Follow-up scripts
+echo ^(e.g. sheep-dog/scripts/setup-namespace.bat^) will deploy against this
+echo context. Use `kubectl config use-context ^<name^>` to switch back when
+echo you are done.
 
 echo %time%
