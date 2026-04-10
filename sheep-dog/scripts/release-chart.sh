@@ -7,9 +7,10 @@
 #
 # Prereqs:
 #   - helm installed and on PATH
-#   - `helm registry login nexus-docker.sheepdog.io --plain-http` already
-#     run interactively as the current user
+#   - `helm registry login nexus-docker.sheepdog.io` already run
+#     interactively as the current user
 #   - hosts file on the runner has `127.0.0.1 nexus-docker.sheepdog.io`
+#   - mkcert root CA trusted on this machine (see nexus/import-rootCA.sh)
 #   - minikube tunnel running on windows-desktop
 #
 # Usage:
@@ -33,7 +34,7 @@ if [[ -z "${chart_tgz}" ]]; then
 fi
 
 echo "Pushing ${chart_tgz} to ${registry}..."
-helm push "${chart_tgz}" "${registry}" --plain-http
+helm push "${chart_tgz}" "${registry}"
 
 echo "Cleaning up ${chart_tgz}..."
 rm -f "${chart_tgz}"

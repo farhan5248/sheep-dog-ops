@@ -8,9 +8,10 @@ REM re-publish the chart manually.
 REM
 REM Prereqs:
 REM   - helm installed and on PATH
-REM   - `helm registry login nexus-docker.sheepdog.io --plain-http` already
-REM     run interactively in the current Windows user session
+REM   - `helm registry login nexus-docker.sheepdog.io` already run
+REM     interactively in the current Windows user session
 REM   - hosts file on the runner has `127.0.0.1 nexus-docker.sheepdog.io`
+REM   - mkcert root CA trusted on this machine (see nexus/import-rootCA.bat)
 REM   - minikube tunnel running on windows-desktop
 REM
 REM Usage:
@@ -40,7 +41,7 @@ exit /b 1
 
 :push
 echo Pushing %CHART_TGZ% to %REGISTRY%...
-helm push "%CHART_TGZ%" %REGISTRY% --plain-http
+helm push "%CHART_TGZ%" %REGISTRY%
 if errorlevel 1 (
     echo ERROR: helm push failed
     popd

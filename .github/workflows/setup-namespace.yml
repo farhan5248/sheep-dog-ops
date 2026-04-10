@@ -68,7 +68,7 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: |
           rm -rf sheep-dog
-          helm pull ${CHART_OCI} --version ${CHART_VERSION} --plain-http --untar
+          helm pull ${CHART_OCI} --version ${CHART_VERSION} --untar
 
       - name: Deploy sheep-dog umbrella helm chart
         working-directory: ${{ runner.temp }}

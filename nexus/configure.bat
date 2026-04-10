@@ -2,7 +2,8 @@
 REM Configure Nexus for hosting the sheep-dog helm chart as an OCI artifact.
 REM
 REM Prereqs:
-REM   - Nexus reachable at http://nexus.sheepdog.io (hosts file + minikube tunnel)
+REM   - Nexus reachable at https://nexus.sheepdog.io (hosts file + minikube tunnel
+REM     + mkcert root CA trusted — see sheep-dog-ops/nexus/import-rootCA.bat)
 REM   - Nexus admin password available in env var NEXUS_ADMIN_PW
 REM   - A deployment password available in env var NEXUS_DEPLOY_PW
 REM
@@ -23,7 +24,7 @@ REM eats them during %VAR% expansion and the script will send a mangled value
 REM to Nexus.
 
 setlocal
-set NEXUS_URL=http://nexus.sheepdog.io
+set NEXUS_URL=https://nexus.sheepdog.io
 set ADMIN=admin
 
 if "%NEXUS_ADMIN_PW%"=="" (
@@ -38,29 +39,37 @@ if "%NEXUS_DEPLOY_PW%"=="" (
 REM -w prints HTTP status on its own line so we can spot failures.
 set CURL_FMT=\n--- HTTP %%{http_code} ---\n
 
+REM --ssl-no-revoke is required because Windows curl uses schannel, which
+REM tries to fetch an online CRL/OCSP endpoint that mkcert dev certs don't
+REM include, resulting in "0x80092012 The revocation function was unable
+REM to check revocation for the certificate". The cert itself is trusted
+REM (mkcert root CA is in the machine Root store); this flag just skips
+REM the revocation check. Browsers, Java, helm, and docker don't hit this.
+set CURL_TLS=--ssl-no-revoke
+
 echo === 1. Enable Docker Bearer Token realm ===
-curl -u %ADMIN%:%NEXUS_ADMIN_PW% -X PUT "%NEXUS_URL%/service/rest/v1/security/realms/active" ^
+curl %CURL_TLS% -u %ADMIN%:%NEXUS_ADMIN_PW% -X PUT "%NEXUS_URL%/service/rest/v1/security/realms/active" ^
     -H "Content-Type: application/json" ^
     -w "%CURL_FMT%" ^
     -d "[\"NexusAuthenticatingRealm\",\"DockerToken\"]"
 echo.
 
 echo === 2. Create helm-hosted docker repo ===
-curl -u %ADMIN%:%NEXUS_ADMIN_PW% -X POST "%NEXUS_URL%/service/rest/v1/repositories/docker/hosted" ^
+curl %CURL_TLS% -u %ADMIN%:%NEXUS_ADMIN_PW% -X POST "%NEXUS_URL%/service/rest/v1/repositories/docker/hosted" ^
     -H "Content-Type: application/json" ^
     -w "%CURL_FMT%" ^
     -d "{\"name\":\"helm-hosted\",\"online\":true,\"storage\":{\"blobStoreName\":\"default\",\"strictContentTypeValidation\":true,\"writePolicy\":\"allow\"},\"docker\":{\"v1Enabled\":false,\"forceBasicAuth\":false,\"httpPort\":8082}}"
 echo.
 
 echo === 3. Create nx-helm-deployer role ===
-curl -u %ADMIN%:%NEXUS_ADMIN_PW% -X POST "%NEXUS_URL%/service/rest/v1/security/roles" ^
+curl %CURL_TLS% -u %ADMIN%:%NEXUS_ADMIN_PW% -X POST "%NEXUS_URL%/service/rest/v1/security/roles" ^
     -H "Content-Type: application/json" ^
     -w "%CURL_FMT%" ^
     -d "{\"id\":\"nx-helm-deployer\",\"name\":\"nx-helm-deployer\",\"description\":\"Push/pull OCI helm charts to helm-hosted\",\"privileges\":[\"nx-repository-view-docker-helm-hosted-*\"],\"roles\":[]}"
 echo.
 
 echo === 4. Create helm-deployer user ===
-curl -u %ADMIN%:%NEXUS_ADMIN_PW% -X POST "%NEXUS_URL%/service/rest/v1/security/users" ^
+curl %CURL_TLS% -u %ADMIN%:%NEXUS_ADMIN_PW% -X POST "%NEXUS_URL%/service/rest/v1/security/users" ^
     -H "Content-Type: application/json" ^
     -w "%CURL_FMT%" ^
     -d "{\"userId\":\"helm-deployer\",\"firstName\":\"Helm\",\"lastName\":\"Deployer\",\"emailAddress\":\"helm-deployer@sheepdog.local\",\"password\":\"%NEXUS_DEPLOY_PW%\",\"status\":\"active\",\"roles\":[\"nx-helm-deployer\"]}"

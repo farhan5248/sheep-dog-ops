@@ -68,7 +68,8 @@ REM files under helm-values/, so we pull-untar to target/ and reference
 REM the extracted values file by namespace.
 REM Prereqs on windows-minipc (where this is run manually):
 REM   - hosts file has nexus-docker.sheepdog.io
-REM   - `helm registry login nexus-docker.sheepdog.io --plain-http` already done
+REM   - `helm registry login nexus-docker.sheepdog.io` already done
+REM   - mkcert root CA trusted on this machine (see nexus/import-rootCA.bat)
 REM   - minikube_start_server.bat running on windows-desktop
 REM
 REM Resolve to an absolute path — helm install refuses chart paths containing
@@ -76,7 +77,7 @@ REM `..` components (SecureJoin rejects upward traversal).
 for %%I in ("%~dp0..\target") do set TARGET_DIR=%%~fI
 if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
 if exist "%TARGET_DIR%\sheep-dog" rmdir /s /q "%TARGET_DIR%\sheep-dog"
-helm pull oci://nexus-docker.sheepdog.io/helm-hosted/sheep-dog --version 0.1.0 --plain-http --untar --untardir "%TARGET_DIR%"
+helm pull oci://nexus-docker.sheepdog.io/helm-hosted/sheep-dog --version 0.1.0 --untar --untardir "%TARGET_DIR%"
 if %ERRORLEVEL% neq 0 (
     echo Failed to pull helm chart.
     exit /b 1
