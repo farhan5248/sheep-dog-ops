@@ -2,7 +2,8 @@
 # Imports the mkcert root CA (mkcert-rootCA.pem in this folder) into:
 #   1. The system trust store (/usr/local/share/ca-certificates)
 #   2. NSS databases for browsers (if libnss3-tools's certutil is present)
-#   3. Java cacerts (if JAVA_HOME is set)
+#   3. Docker daemon cert dirs (for nexus-docker.sheepdog.io)
+#   4. Java cacerts (if JAVA_HOME is set)
 # Needed on every client machine that will talk HTTPS to
 # nexus.sheepdog.io / nexus-docker.sheepdog.io.
 #
@@ -42,8 +43,15 @@ else
     echo "NOTE: certutil not found (apt install libnss3-tools) -- skipping NSS import"
 fi
 
+echo "=== 3. Import into Docker daemon cert dir ==="
+DOCKER_CERT_DIR="/etc/docker/certs.d/nexus-docker.sheepdog.io"
+mkdir -p "$DOCKER_CERT_DIR"
+install -m 644 "$CA_FILE" "$DOCKER_CERT_DIR/ca.crt"
+echo "Installed to $DOCKER_CERT_DIR/ca.crt"
+echo "NOTE: restart Docker if it was already running (sudo systemctl restart docker)"
+
 if [[ -n "${JAVA_HOME:-}" && -f "$JAVA_HOME/lib/security/cacerts" ]]; then
-    echo "=== 3. Import into Java cacerts at $JAVA_HOME/lib/security/cacerts ==="
+    echo "=== 4. Import into Java cacerts at $JAVA_HOME/lib/security/cacerts ==="
     # Default cacerts password is "changeit". Tolerate "already exists".
     "$JAVA_HOME/bin/keytool" -importcert -noprompt -trustcacerts \
         -alias mkcert-sheepdog \
