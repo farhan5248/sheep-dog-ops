@@ -35,11 +35,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        overwrite-settings: false
+      run: echo "JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64" >> $GITHUB_ENV
     - name: Set up Git
       run: |
         git config --local user.name "${{ vars.ACTIONS_BOT_NAME }}"
