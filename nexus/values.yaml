@@ -42,7 +42,15 @@ ingress:
   ingressClassName: nginx
   hosts:
     - nexus.sheepdog.io
+  tls:
+    - secretName: nexus-tls
+      hosts:
+        - nexus.sheepdog.io
+        - nexus-docker.sheepdog.io
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    # Phase 1: keep HTTP working alongside HTTPS so existing --plain-http
+    # clients don't break until Phase 3 cuts them over.
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
