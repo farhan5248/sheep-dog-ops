@@ -63,7 +63,7 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo Pulling sheep-dog umbrella helm chart from Nexus OCI (#82)...
-REM Chart version pinned to 0.1.0 until #32. Chart ships its own env values
+REM Chart version pinned to 0.2.0 until #32. Chart ships its own env values
 REM files under helm-values/, so we pull-untar to target/ and reference
 REM the extracted values file by namespace.
 REM Prereqs on windows-minipc (where this is run manually):
@@ -77,7 +77,7 @@ REM `..` components (SecureJoin rejects upward traversal).
 for %%I in ("%~dp0..\target") do set TARGET_DIR=%%~fI
 if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
 if exist "%TARGET_DIR%\sheep-dog" rmdir /s /q "%TARGET_DIR%\sheep-dog"
-helm pull oci://nexus-docker.sheepdog.io/helm-hosted/sheep-dog --version 0.1.0 --untar --untardir "%TARGET_DIR%"
+helm pull oci://nexus-docker.sheepdog.io/helm-hosted/sheep-dog --version 0.2.0 --untar --untardir "%TARGET_DIR%"
 if %ERRORLEVEL% neq 0 (
     echo Failed to pull helm chart.
     exit /b 1

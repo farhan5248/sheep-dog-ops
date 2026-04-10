@@ -33,7 +33,7 @@ jobs:
       BASE_STACK_NAME: sheep-dog-aws
       REGION: us-east-1
       NAMESPACE: prod
-      CHART_VERSION: "0.1.0"
+      CHART_VERSION: "0.2.0"
       CHART_OCI: oci://nexus-docker.sheepdog.io/helm-hosted/sheep-dog
     outputs:
       service_url: ${{ steps.get_service_url.outputs.service_url }}
