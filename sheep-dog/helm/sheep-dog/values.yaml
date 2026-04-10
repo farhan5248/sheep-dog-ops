@@ -5,7 +5,7 @@
 # just their own image tag via --set images.<svc>.tag=<version>.
 images:
   db:
-    repository: ghcr.io/farhan5248/sheep-dog-dev-db
+    repository: nexus-docker.sheepdog.io/sheep-dog-dev-db
     tag: latest
     pullPolicy: IfNotPresent
   amq:
@@ -13,15 +13,15 @@ images:
     tag: "2.41.0"
     pullPolicy: IfNotPresent
   asciidocApi:
-    repository: ghcr.io/farhan5248/sheep-dog-asciidoc-api-svc
+    repository: nexus-docker.sheepdog.io/sheep-dog-asciidoc-api-svc
     tag: latest
     pullPolicy: Always
   cucumberGen:
-    repository: ghcr.io/farhan5248/sheep-dog-cucumber-gen-svc
+    repository: nexus-docker.sheepdog.io/sheep-dog-cucumber-gen-svc
     tag: latest
     pullPolicy: Always
   mcp:
-    repository: ghcr.io/farhan5248/sheep-dog-mcp-svc
+    repository: nexus-docker.sheepdog.io/sheep-dog-mcp-svc
     tag: latest
     pullPolicy: Always
 

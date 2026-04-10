@@ -16,8 +16,8 @@
     </scm>
     <repositories>
         <repository>
-            <id>github</id>
-            <url>https://maven.pkg.github.com/farhan5248/sheep-dog-ops</url>
+            <id>nexus</id>
+            <url>https://nexus.sheepdog.io/repository/maven-public/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -28,15 +28,13 @@
     </repositories>
     <distributionManagement>
         <repository>
-            <id>github</id>
-            <url>https://maven.pkg.github.com/farhan5248/sheep-dog-ops</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
+            <id>nexus-releases</id>
+            <url>https://nexus.sheepdog.io/repository/maven-releases/</url>
         </repository>
+        <snapshotRepository>
+            <id>nexus-snapshots</id>
+            <url>https://nexus.sheepdog.io/repository/maven-snapshots/</url>
+        </snapshotRepository>
     </distributionManagement>
     <dependencies>
         <dependency>
