@@ -1,8 +1,8 @@
 @echo off
 REM Wrapper around minikube_start.bat for machines that host services for the
-REM whole LAN (e.g. windows-desktop running Nexus). Exposes the ingress port
-REM on 0.0.0.0 via netsh portproxy so other machines on the LAN can reach it,
-REM THEN hands off to the base script (which ends with a foreground
+REM whole LAN (e.g. windows-desktop running Nexus). Exposes the ingress ports
+REM (80 + 443) via netsh portproxy so other machines on the LAN can reach
+REM them, THEN hands off to the base script (which ends with a foreground
 REM `minikube tunnel`).
 REM
 REM Why portproxy setup comes FIRST:
@@ -13,7 +13,8 @@ REM
 REM Why this is needed at all:
 REM   `minikube tunnel` only binds to 127.0.0.1, so the minikube ingress is
 REM   not reachable across the LAN by default. The portproxy forwards
-REM   0.0.0.0:80 -> 127.0.0.1:80 on this host.
+REM   <LAN-IP>:80 -> 127.0.0.1:80 and <LAN-IP>:443 -> 127.0.0.1:443 on this
+REM   host. Port 443 is needed now that nexus serves HTTPS (#217).
 REM
 REM Requirements:
 REM   - Must be run as Administrator (portproxy + firewall rules are privileged)
@@ -47,14 +48,23 @@ if "%LAN_IP%"=="" (
 )
 echo Detected LAN IP: %LAN_IP%
 
-echo Removing any existing portproxy rules on port 80...
-netsh interface portproxy delete v4tov4 listenport=80 listenaddress=0.0.0.0 >nul 2>&1
-netsh interface portproxy delete v4tov4 listenport=80 listenaddress=%LAN_IP% >nul 2>&1
+echo Removing any existing portproxy rules on ports 80 and 443...
+netsh interface portproxy delete v4tov4 listenport=80  listenaddress=0.0.0.0   >nul 2>&1
+netsh interface portproxy delete v4tov4 listenport=80  listenaddress=%LAN_IP%  >nul 2>&1
+netsh interface portproxy delete v4tov4 listenport=443 listenaddress=0.0.0.0   >nul 2>&1
+netsh interface portproxy delete v4tov4 listenport=443 listenaddress=%LAN_IP%  >nul 2>&1
 
 echo Adding portproxy: %LAN_IP%:80 -^> 127.0.0.1:80...
 netsh interface portproxy add v4tov4 listenport=80 listenaddress=%LAN_IP% connectport=80 connectaddress=127.0.0.1
 if errorlevel 1 (
-    echo ERROR: failed to add portproxy rule.
+    echo ERROR: failed to add portproxy rule for port 80.
+    exit /b 1
+)
+
+echo Adding portproxy: %LAN_IP%:443 -^> 127.0.0.1:443...
+netsh interface portproxy add v4tov4 listenport=443 listenaddress=%LAN_IP% connectport=443 connectaddress=127.0.0.1
+if errorlevel 1 (
+    echo ERROR: failed to add portproxy rule for port 443.
     exit /b 1
 )
 
@@ -62,13 +72,22 @@ echo Ensuring firewall rule "Nexus ingress :80" allows inbound TCP/80...
 netsh advfirewall firewall delete rule name="Nexus ingress :80" >nul 2>&1
 netsh advfirewall firewall add rule name="Nexus ingress :80" dir=in action=allow protocol=TCP localport=80
 if errorlevel 1 (
-    echo ERROR: failed to add firewall rule.
+    echo ERROR: failed to add firewall rule for port 80.
+    exit /b 1
+)
+
+echo Ensuring firewall rule "Nexus ingress :443" allows inbound TCP/443...
+netsh advfirewall firewall delete rule name="Nexus ingress :443" >nul 2>&1
+netsh advfirewall firewall add rule name="Nexus ingress :443" dir=in action=allow protocol=TCP localport=443
+if errorlevel 1 (
+    echo ERROR: failed to add firewall rule for port 443.
     exit /b 1
 )
 
 echo LAN exposure configured. Verify later with:
 echo     netsh interface portproxy show v4tov4
 echo     netsh advfirewall firewall show rule name="Nexus ingress :80"
+echo     netsh advfirewall firewall show rule name="Nexus ingress :443"
 echo.
 
 echo === Starting minikube ^(base script^) ===

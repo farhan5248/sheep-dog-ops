@@ -41,13 +41,24 @@ if "%JAVA_HOME%"=="" (
 
 echo.
 echo === 2. Import into Java cacerts at %JAVA_HOME%\lib\security\cacerts ===
-REM -noprompt + -trustcacerts; default cacerts password is "changeit".
-REM If the alias already exists keytool exits non-zero, which we tolerate.
+REM Default cacerts password is "changeit". To make this idempotent we first
+REM delete any pre-existing alias (failure is fine -- means it wasn't there)
+REM and then import fresh. Without this, re-runs after a CA rotation fail
+REM with "alias <mkcert-sheepdog> already exists".
+"%JAVA_HOME%\bin\keytool" -delete ^
+    -alias mkcert-sheepdog ^
+    -keystore "%JAVA_HOME%\lib\security\cacerts" ^
+    -storepass changeit 2>nul
+
 "%JAVA_HOME%\bin\keytool" -importcert -noprompt -trustcacerts ^
     -alias mkcert-sheepdog ^
     -file "%CA_FILE%" ^
     -keystore "%JAVA_HOME%\lib\security\cacerts" ^
     -storepass changeit
+if errorlevel 1 (
+    echo ERROR: keytool import failed
+    exit /b 1
+)
 
 echo.
 echo Done.
