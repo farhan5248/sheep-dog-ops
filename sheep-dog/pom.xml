@@ -24,8 +24,8 @@
              these to the latest releases in Nexus on `mvn ...:release`.
              sheep-dog-mgmt then reads the resolved values from project
              properties and writes them into values.yaml via imageTagMap. -->
-        <sheep-dog-asciidoc-api-svc.version>1.8-SNAPSHOT</sheep-dog-asciidoc-api-svc.version>
-        <sheep-dog-cucumber-gen-svc.version>1.7-SNAPSHOT</sheep-dog-cucumber-gen-svc.version>
+        <sheep-dog-asciidoc-api-svc.version>1.8</sheep-dog-asciidoc-api-svc.version>
+        <sheep-dog-cucumber-gen-svc.version>1.7</sheep-dog-cucumber-gen-svc.version>
         <sheep-dog-mcp-svc.version>1.8-SNAPSHOT</sheep-dog-mcp-svc.version>
     </properties>
 
@@ -103,7 +103,7 @@
             <plugin>
                 <groupId>org.farhan</groupId>
                 <artifactId>sheep-dog-mgmt-maven-plugin</artifactId>
-                <version>1.30</version>
+                <version>1.32</version>
                 <configuration>
                     <!-- Map each pom property name to the service block
                          key under `images:` in values.yaml. The mojo
