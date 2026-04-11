@@ -8,7 +8,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -104,8 +105,8 @@ public class ReleaseMojo extends AbstractMojo {
 			// resolved pom dependency versions. Mojo does nothing unless
 			// the caller configured imageTagMap.
 			if (imageTagMap != null && !imageTagMap.isEmpty()) {
-				updateValuesYaml(new File(project.getBasedir(), valuesYamlPath),
-						project.getProperties(), imageTagMap);
+				updateValuesYaml(project.getBasedir(),
+						new File(project.getBasedir(), valuesYamlPath), imageTagMap);
 			}
 
 			gitCommit(git, workingDir, "[Release] Prepare release " + project.getArtifactId() + "-" + cv);
@@ -229,6 +230,14 @@ public class ReleaseMojo extends AbstractMojo {
 	// up the property value, finds the service block under `images:` in
 	// values.yaml, and replaces the `tag:` line under it.
 	//
+	// Reads property values directly from pom.xml on disk rather than from
+	// MavenProject.getProperties(). The MavenProject object is populated
+	// at mojo invocation and is NOT refreshed when the nested
+	// versions-maven-plugin:update-properties run modifies pom.xml earlier
+	// in the release flow, so project.getProperties() returns stale
+	// pre-update values. Reading the file directly picks up the fresh
+	// release versions written by versions-maven-plugin.
+	//
 	// This is a line-based rewrite, not a full YAML parse, so it preserves
 	// comments and formatting. Assumptions about the values.yaml layout:
 	//   - Service blocks live under `images:` at 2-space indent: `  <key>:`
@@ -238,21 +247,33 @@ public class ReleaseMojo extends AbstractMojo {
 	// Fails loudly if a pom property has no value, if the service block is
 	// missing from values.yaml, or if the tag line is missing. Silent
 	// fallthrough would produce a chart that references stale tags.
-	protected void updateValuesYaml(File valuesYaml, Properties pomProperties,
+	protected void updateValuesYaml(File projectDir, File valuesYaml,
 			Map<String, String> imageTagMap) throws Exception {
 		if (!valuesYaml.exists()) {
 			throw new Exception("values.yaml not found at " + valuesYaml.getAbsolutePath());
 		}
+		File pomFile = new File(projectDir, "pom.xml");
+		if (!pomFile.exists()) {
+			throw new Exception("pom.xml not found at " + pomFile.getAbsolutePath());
+		}
+		String pomContent = readFile(pomFile);
 		String content = readFile(valuesYaml);
 		String[] lines = content.split("\n", -1);
 
 		for (Map.Entry<String, String> entry : imageTagMap.entrySet()) {
 			String pomProperty = entry.getKey();
 			String serviceKey = entry.getValue();
-			String resolvedVersion = pomProperties.getProperty(pomProperty);
-			if (resolvedVersion == null || resolvedVersion.isEmpty()) {
+			// Extract <pomProperty>VALUE</pomProperty> from pom.xml on disk.
+			Pattern p = Pattern.compile("<" + Pattern.quote(pomProperty) + ">([^<]+)</"
+					+ Pattern.quote(pomProperty) + ">");
+			Matcher m = p.matcher(pomContent);
+			if (!m.find()) {
+				throw new Exception("pom property " + pomProperty + " not found in " + pomFile.getName());
+			}
+			String resolvedVersion = m.group(1).trim();
+			if (resolvedVersion.isEmpty()) {
 				throw new Exception("pom property " + pomProperty
-						+ " has no value — versions-maven-plugin should have resolved it before release");
+						+ " has empty value in " + pomFile.getName());
 			}
 			if (resolvedVersion.endsWith("-SNAPSHOT")) {
 				throw new Exception("pom property " + pomProperty + " is still a SNAPSHOT ("
