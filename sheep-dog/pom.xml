@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.farhan</groupId>
     <artifactId>sheep-dog-chart</artifactId>
-    <version>0.2.8</version>
+    <version>0.2.9-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Sheep Dog Umbrella Helm Chart</name>
     <description>
