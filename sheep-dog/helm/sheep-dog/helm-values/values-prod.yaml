@@ -8,5 +8,22 @@
 # Leaving this empty makes the ingress match any host header, which matches
 # the prior kustomize behavior.
 
+# Prod pulls images from ghcr.io (public), not nexus-docker.sheepdog.io (LAN).
+# EKS kubelets have no route to the LAN Nexus at 192.168.2.17. The ghcr.io
+# mirror is populated by the service release workflow via the `public` maven
+# profile (#236). Only `repository` is overridden here — `tag` is inherited
+# from the base values.yaml, which the chart release mojo pins to the latest
+# service release version. dev/qa keep pulling from Nexus on local minikube
+# because it's LAN-local and faster (see values-dev.yaml, values-qa.yaml).
+images:
+  db:
+    repository: ghcr.io/farhan5248/sheep-dog-dev-db
+  asciidocApi:
+    repository: ghcr.io/farhan5248/sheep-dog-asciidoc-api-svc
+  cucumberGen:
+    repository: ghcr.io/farhan5248/sheep-dog-cucumber-gen-svc
+  mcp:
+    repository: ghcr.io/farhan5248/sheep-dog-mcp-svc
+
 # AWS EKS uses the gp2 storage class for EBS-backed PVCs.
 pvcStorageClass: gp2
