@@ -27,7 +27,7 @@ on:
           - sheep-dog-svc-maven-plugin
           - sheep-dog-grammar
           - sheep-dog-mgmt-maven-plugin
-          - sheep-dog-chart
+          - sheep-dog
           - sheepdogasciidoc.parent
           - sheepdogcucumber.parent
           - sheepdogeclipseplugin.parent
