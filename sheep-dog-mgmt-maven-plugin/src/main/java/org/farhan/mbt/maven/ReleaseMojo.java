@@ -248,7 +248,12 @@ public class ReleaseMojo extends AbstractMojo {
 	// comments and formatting. Assumptions about the values.yaml layout:
 	//   - Service blocks live under `images:` at 2-space indent: `  <key>:`
 	//   - Each block has a `tag:` line at 4-space indent: `    tag: <value>`
-	//   - `<value>` can be quoted or unquoted — the whole line gets rewritten
+	//   - The rewrite always emits the value as a quoted string
+	//     (`    tag: "<value>"`). This is required because bare semver-like
+	//     tokens are parsed as YAML floats: `1.10` becomes 1.1 (trailing zero
+	//     stripped), `2.0` becomes 2, etc. Helm then templates the float back
+	//     to a string and produces image refs pointing at tags that never
+	//     existed. Quoting forces string interpretation.
 	//
 	// Fails loudly if a pom property has no value, if the service block is
 	// missing from values.yaml, or if the tag line is missing. Silent
@@ -319,7 +324,7 @@ public class ReleaseMojo extends AbstractMojo {
 				throw new Exception("no `    tag:` line found under " + blockHeader
 						+ " in " + valuesYaml.getName());
 			}
-			lines[tagLineIdx] = "    tag: " + resolvedVersion;
+			lines[tagLineIdx] = "    tag: \"" + resolvedVersion + "\"";
 			getLog().info("values.yaml: " + serviceKey + ".tag = " + resolvedVersion
 					+ " (from " + pomProperty + ")");
 		}
