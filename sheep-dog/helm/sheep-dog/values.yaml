@@ -22,7 +22,7 @@ images:
     pullPolicy: Always
   mcp:
     repository: nexus-docker.sheepdog.io/sheep-dog-mcp-svc
-    tag: 1.7
+    tag: 1.8
     pullPolicy: Always
 
 # Ingress host for the sheep-dog ingress.
