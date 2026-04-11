@@ -21,7 +21,7 @@ jobs:
   # chart pom has source changes or its service dep properties have new
   # release versions available in Nexus, so it's safe to include in
   # every ops release run.
-  sheep-dog-chart:
+  sheep-dog:
     needs: [sheep-dog-mgmt-maven-plugin]
     uses: farhan5248/sheep-dog-ops/.github/workflows/release-maven.yml@main
     with:
