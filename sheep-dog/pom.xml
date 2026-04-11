@@ -24,9 +24,9 @@
              these to the latest releases in Nexus on `mvn ...:release`.
              sheep-dog-mgmt then reads the resolved values from project
              properties and writes them into values.yaml via imageTagMap. -->
-        <sheep-dog-asciidoc-api-svc.version>1.6-SNAPSHOT</sheep-dog-asciidoc-api-svc.version>
-        <sheep-dog-cucumber-gen-svc.version>1.6-SNAPSHOT</sheep-dog-cucumber-gen-svc.version>
-        <sheep-dog-mcp-svc.version>1.7-SNAPSHOT</sheep-dog-mcp-svc.version>
+        <sheep-dog-asciidoc-api-svc.version>1.8-SNAPSHOT</sheep-dog-asciidoc-api-svc.version>
+        <sheep-dog-cucumber-gen-svc.version>1.7-SNAPSHOT</sheep-dog-cucumber-gen-svc.version>
+        <sheep-dog-mcp-svc.version>1.8-SNAPSHOT</sheep-dog-mcp-svc.version>
     </properties>
 
     <scm>
@@ -133,19 +133,6 @@
                     <appVersion>${project.version}</appVersion>
                     <useLocalHelmBinary>true</useLocalHelmBinary>
                     <autoDetectLocalHelmBinary>true</autoDetectLocalHelmBinary>
-                    <!-- OCI mode: helm-maven-plugin's PushMojo detects the
-                         `oci://` URL prefix and uses `helm push` under the
-                         hood. No `<type>` field (the RepoType enum only
-                         has CHARTMUSEUM / ARTIFACTORY / NEXUS and none
-                         apply here). Registry auth comes from a prior
-                         `helm registry login nexus-docker.sheepdog.io`
-                         on the host, stored in
-                         ~/.config/helm/registry/config.json. -->
-                    <uploadRepoStable>
-                        <name>nexus-helm</name>
-                        <url>oci://nexus-docker.sheepdog.io/helm-hosted</url>
-                    </uploadRepoStable>
-                    <skipPushLogin>true</skipPushLogin>
                 </configuration>
                 <executions>
                     <execution>
@@ -162,12 +149,38 @@
                             <goal>package</goal>
                         </goals>
                     </execution>
+                </executions>
+            </plugin>
+            <!-- Push the packaged chart to Nexus OCI via exec-maven-plugin
+                 instead of helm-maven-plugin:push. The kokuwa plugin's
+                 push goal (6.13.0) has a URL-parsing bug in its OCI
+                 Exists pre-check: it prepends https:// to the full
+                 `oci://...` string without stripping the scheme, so Java
+                 URL parsing sees host=`oci` and DNS fails. Mirrors the
+                 `helm-pull` / `helm-deploy` exec pattern used in every
+                 service pom. Prereq: `helm registry login
+                 nexus-docker.sheepdog.io` must have been run on the
+                 host (creds in ~/.config/helm/registry/config.json).
+                 See farhan5248/sheep-dog-main#32 for the diagnosis. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
                     <execution>
                         <id>helm-push</id>
                         <phase>deploy</phase>
                         <goals>
-                            <goal>push</goal>
+                            <goal>exec</goal>
                         </goals>
+                        <configuration>
+                            <executable>helm</executable>
+                            <arguments>
+                                <argument>push</argument>
+                                <argument>${project.build.directory}/helm/repo/sheep-dog-${project.version}.tgz</argument>
+                                <argument>oci://nexus-docker.sheepdog.io/helm-hosted</argument>
+                            </arguments>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
