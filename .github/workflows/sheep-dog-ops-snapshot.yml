@@ -23,8 +23,20 @@ jobs:
       project: 'sheep-dog-mgmt-maven-plugin'
     secrets: inherit
 
-  merge-into-develop:
+  # Publish the sheep-dog umbrella helm chart as a SNAPSHOT. `mvn deploy`
+  # drives helm-maven-plugin which packages the chart and pushes it to
+  # Nexus OCI at oci://nexus-docker.sheepdog.io/helm-hosted/sheep-dog as
+  # the SNAPSHOT tag (e.g. sheep-dog:0.2.2-SNAPSHOT). Helm semver accepts
+  # the -SNAPSHOT suffix as a valid pre-release version.
+  sheep-dog-chart:
     needs: [sheep-dog-mgmt-maven-plugin]
+    uses: farhan5248/sheep-dog-ops/.github/workflows/snapshot-maven.yml@main
+    with:
+      project: 'sheep-dog'
+    secrets: inherit
+
+  merge-into-develop:
+    needs: [sheep-dog-chart]
     uses: farhan5248/sheep-dog-ops/.github/workflows/merge.yml@main
     with:
       source: 'main'

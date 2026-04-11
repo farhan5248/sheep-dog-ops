@@ -15,3 +15,15 @@ jobs:
     with:
       project: 'sheep-dog-mgmt-maven-plugin'
     secrets: inherit
+
+  # Release the sheep-dog umbrella helm chart. The mgmt plugin's
+  # ReleaseMojo skip-if-unchanged logic will no-op this job unless the
+  # chart pom has source changes or its service dep properties have new
+  # release versions available in Nexus, so it's safe to include in
+  # every ops release run.
+  sheep-dog-chart:
+    needs: [sheep-dog-mgmt-maven-plugin]
+    uses: farhan5248/sheep-dog-ops/.github/workflows/release-maven.yml@main
+    with:
+      project: 'sheep-dog'
+    secrets: inherit
