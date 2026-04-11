@@ -9,14 +9,20 @@ echo   - minikube: minikube/setup-cluster.bat or setup-cluster-local.bat
 echo   - EKS:      eks/setup-cluster.bat ^(which runs aws eks update-kubeconfig^)
 
 set NAMESPACE=%1
-set CHART_VERSION=0.2.1
+set CHART_VERSION=%2
 set CHART_OCI=oci://nexus-docker.sheepdog.io/helm-hosted/sheep-dog
 
 if "%NAMESPACE%"=="" (
-    echo Usage: setup-namespace.bat [namespace]
-    echo Example: setup-namespace.bat qa
+    echo Usage: setup-namespace.bat [namespace] [chart-version]
+    echo Example: setup-namespace.bat qa 0.2.2
+    echo Example: setup-namespace.bat dev          ^(defaults to latest^)
     exit /b 1
 )
+
+REM Default to the `latest` tag in the Nexus OCI helm registry. Callers
+REM (qa, prod, pinned e2e) pass an explicit semver like 0.2.2 to lock to
+REM a specific release.
+if "%CHART_VERSION%"=="" set CHART_VERSION=latest
 
 echo Checking if kubectl is installed...
 kubectl version --client

@@ -1,0 +1,181 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.farhan</groupId>
+    <artifactId>sheep-dog-chart</artifactId>
+    <version>0.2.2-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Sheep Dog Umbrella Helm Chart</name>
+    <description>
+        Umbrella Helm chart that deploys the sheep-dog service stack as a
+        single versioned artifact. The pom is a maven-shaped wrapper around
+        the chart: no Java, no jar. It exists purely to reuse three maven
+        facilities — versions-maven-plugin as a version oracle for service
+        image tags, sheep-dog-mgmt-maven-plugin for the git + file-edit
+        release dance, and io.kokuwa.maven helm-maven-plugin for chart
+        package + push to Nexus OCI. Works only while every image-producing
+        service is also a maven project with releases in Nexus; a future
+        non-maven service will need a different version source.
+    </description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Image-producing service versions. versions-maven-plugin bumps
+             these to the latest releases in Nexus on `mvn ...:release`.
+             sheep-dog-mgmt then reads the resolved values from project
+             properties and writes them into values.yaml via imageTagMap. -->
+        <sheep-dog-asciidoc-api-svc.version>1.6-SNAPSHOT</sheep-dog-asciidoc-api-svc.version>
+        <sheep-dog-cucumber-gen-svc.version>1.6-SNAPSHOT</sheep-dog-cucumber-gen-svc.version>
+        <sheep-dog-mcp-svc.version>1.7-SNAPSHOT</sheep-dog-mcp-svc.version>
+
+        <!-- Plugin versions -->
+        <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
+        <sheep-dog-mgmt-maven-plugin.version>1.30-SNAPSHOT</sheep-dog-mgmt-maven-plugin.version>
+        <helm-maven-plugin.version>6.13.0</helm-maven-plugin.version>
+    </properties>
+
+    <scm>
+        <connection>scm:git:https://github.com/farhan5248/sheep-dog-ops</connection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <repositories>
+        <repository>
+            <id>nexus</id>
+            <url>https://nexus.sheepdog.io/repository/maven-public/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <!-- The chart artifact itself is pushed to Nexus OCI via
+             helm-maven-plugin, not via standard maven distribution.
+             These entries exist so `mvn deploy` can deploy the pom
+             artifact (for dependency resolution by downstream charts
+             in the future) without failing. -->
+        <repository>
+            <id>nexus-releases</id>
+            <url>https://nexus.sheepdog.io/repository/maven-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>nexus-snapshots</id>
+            <url>https://nexus.sheepdog.io/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <dependencies>
+        <!-- Image-producing services only. versions-maven-plugin walks
+             these on release and bumps the property values above. The
+             dependencies themselves are never used at build time
+             (packaging=pom, no compile phase). -->
+        <dependency>
+            <groupId>org.farhan</groupId>
+            <artifactId>sheep-dog-asciidoc-api-svc</artifactId>
+            <version>${sheep-dog-asciidoc-api-svc.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>org.farhan</groupId>
+            <artifactId>sheep-dog-cucumber-gen-svc</artifactId>
+            <version>${sheep-dog-cucumber-gen-svc.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>org.farhan</groupId>
+            <artifactId>sheep-dog-mcp-svc</artifactId>
+            <version>${sheep-dog-mcp-svc.version}</version>
+            <type>pom</type>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>${versions-maven-plugin.version}</version>
+                <configuration>
+                    <includes>
+                        <include>org.farhan:*:*</include>
+                    </includes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.farhan</groupId>
+                <artifactId>sheep-dog-mgmt-maven-plugin</artifactId>
+                <version>${sheep-dog-mgmt-maven-plugin.version}</version>
+                <configuration>
+                    <!-- Map each pom property name to the service block
+                         key under `images:` in values.yaml. The mojo
+                         rewrites `    tag:` under each listed block with
+                         the resolved property value. -->
+                    <imageTagMap>
+                        <sheep-dog-asciidoc-api-svc.version>asciidocApi</sheep-dog-asciidoc-api-svc.version>
+                        <sheep-dog-cucumber-gen-svc.version>cucumberGen</sheep-dog-cucumber-gen-svc.version>
+                        <sheep-dog-mcp-svc.version>mcp</sheep-dog-mcp-svc.version>
+                    </imageTagMap>
+                    <valuesYamlPath>helm/sheep-dog/values.yaml</valuesYamlPath>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.kokuwa.maven</groupId>
+                <artifactId>helm-maven-plugin</artifactId>
+                <version>${helm-maven-plugin.version}</version>
+                <configuration>
+                    <chartDirectory>${project.basedir}/helm/sheep-dog</chartDirectory>
+                    <!-- Override Chart.yaml's version+appVersion with the
+                         pom version so the packaged .tgz always matches
+                         the pom. sheep-dog-mgmt-maven-plugin also updates
+                         Chart.yaml in source via updateVersion; this is a
+                         safety net that prevents a packaged chart from
+                         drifting if the two source files ever disagree. -->
+                    <chartVersion>${project.version}</chartVersion>
+                    <appVersion>${project.version}</appVersion>
+                    <useLocalHelmBinary>true</useLocalHelmBinary>
+                    <autoDetectLocalHelmBinary>true</autoDetectLocalHelmBinary>
+                    <!-- OCI mode: helm-maven-plugin's PushMojo detects the
+                         `oci://` URL prefix and uses `helm push` under the
+                         hood. No `<type>` field (the RepoType enum only
+                         has CHARTMUSEUM / ARTIFACTORY / NEXUS and none
+                         apply here). Registry auth comes from a prior
+                         `helm registry login nexus-docker.sheepdog.io`
+                         on the host, stored in
+                         ~/.config/helm/registry/config.json. -->
+                    <uploadRepoStable>
+                        <name>nexus-helm</name>
+                        <url>oci://nexus-docker.sheepdog.io/helm-hosted</url>
+                    </uploadRepoStable>
+                    <skipPushLogin>true</skipPushLogin>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>helm-lint</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>lint</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>helm-package</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>helm-push</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>push</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

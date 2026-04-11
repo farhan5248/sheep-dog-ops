@@ -7,6 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -26,6 +28,25 @@ public class ReleaseMojo extends AbstractMojo {
 
 	@Parameter(property = "preparationGoals", defaultValue = "deploy,-DskipTests")
 	public String preparationGoals;
+
+	// Optional: when set, the release flow also rewrites image tags in a
+	// values.yaml file after updating the version files. Used by the
+	// sheep-dog umbrella chart pom to publish versioned image references
+	// alongside the chart release. Each map entry is
+	// <pom-property-name> -> <values.yaml-service-block-key>, e.g.
+	// asciidoc-api-svc.version -> asciidocApi. The pom property must
+	// already be resolved to a concrete version (versions-maven-plugin
+	// runs before this mojo), and the values.yaml must have a matching
+	// block under `images:` with a `tag:` line to rewrite.
+	@Parameter
+	public Map<String, String> imageTagMap;
+
+	// Path to values.yaml relative to the project basedir. Only used when
+	// imageTagMap is non-empty. Default assumes the sheep-dog umbrella
+	// chart layout; other chart projects (e.g. future tamarian) can
+	// override via plugin configuration.
+	@Parameter(property = "valuesYamlPath", defaultValue = "helm/sheep-dog/values.yaml")
+	public String valuesYamlPath;
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -73,6 +94,20 @@ public class ReleaseMojo extends AbstractMojo {
 			updateVersion(project.getBasedir(), "Bundle-Version: ", cv + ".qualifier", cv + "", "MANIFEST.MF");
 			updateVersion(project.getBasedir(), "version=\"", cv + ".qualifier\"", cv + "\"", "feature.xml");
 			updateVersion(project.getBasedir(), "\"version\": \"", cv + "-SNAPSHOT\"", cv + "\"", "package.json");
+			// Helm chart version + appVersion. Two calls because the two
+			// lines differ in quoting (version: is unquoted, appVersion: "..."
+			// is quoted per Helm convention).
+			updateVersion(project.getBasedir(), "version: ", cv + "-SNAPSHOT", cv, "Chart.yaml");
+			updateVersion(project.getBasedir(), "appVersion: \"", cv + "-SNAPSHOT\"", cv + "\"", "Chart.yaml");
+
+			// For chart projects: rewrite image tags in values.yaml from
+			// resolved pom dependency versions. Mojo does nothing unless
+			// the caller configured imageTagMap.
+			if (imageTagMap != null && !imageTagMap.isEmpty()) {
+				updateValuesYaml(new File(project.getBasedir(), valuesYamlPath),
+						project.getProperties(), imageTagMap);
+			}
+
 			gitCommit(git, workingDir, "[Release] Prepare release " + project.getArtifactId() + "-" + cv);
 			gitTag(git, workingDir, project.getArtifactId() + "-" + cv);
 
@@ -96,6 +131,12 @@ public class ReleaseMojo extends AbstractMojo {
 			updateVersion(project.getBasedir(), "Bundle-Version: ", cv + "", nv + ".qualifier", "MANIFEST.MF");
 			updateVersion(project.getBasedir(), "version=\"", cv + "\"", nv + ".qualifier\"", "feature.xml");
 			updateVersion(project.getBasedir(), "\"version\": \"", cv + "\"", nv + "-SNAPSHOT\"", "package.json");
+			updateVersion(project.getBasedir(), "version: ", cv, nv + "-SNAPSHOT", "Chart.yaml");
+			updateVersion(project.getBasedir(), "appVersion: \"", cv + "\"", nv + "-SNAPSHOT\"", "Chart.yaml");
+			// values.yaml image tags are NOT reverted on the post-release
+			// bump. They stay at whatever was resolved during this release
+			// cycle. The next release run will overwrite them with the
+			// newly resolved versions.
 			gitCommit(git, workingDir, "[Release] Prepare for next development iteration");
 
 			runOrFail(git, workingDir, "push");
@@ -180,6 +221,83 @@ public class ReleaseMojo extends AbstractMojo {
 		} else {
 			getLog().info("No dependency changes to commit");
 		}
+	}
+
+	// Rewrites image tags in a values.yaml file using pom property values
+	// resolved by versions-maven-plugin. Each imageTagMap entry is
+	// <pom-property> -> <values.yaml service block key>: the method looks
+	// up the property value, finds the service block under `images:` in
+	// values.yaml, and replaces the `tag:` line under it.
+	//
+	// This is a line-based rewrite, not a full YAML parse, so it preserves
+	// comments and formatting. Assumptions about the values.yaml layout:
+	//   - Service blocks live under `images:` at 2-space indent: `  <key>:`
+	//   - Each block has a `tag:` line at 4-space indent: `    tag: <value>`
+	//   - `<value>` can be quoted or unquoted — the whole line gets rewritten
+	//
+	// Fails loudly if a pom property has no value, if the service block is
+	// missing from values.yaml, or if the tag line is missing. Silent
+	// fallthrough would produce a chart that references stale tags.
+	protected void updateValuesYaml(File valuesYaml, Properties pomProperties,
+			Map<String, String> imageTagMap) throws Exception {
+		if (!valuesYaml.exists()) {
+			throw new Exception("values.yaml not found at " + valuesYaml.getAbsolutePath());
+		}
+		String content = readFile(valuesYaml);
+		String[] lines = content.split("\n", -1);
+
+		for (Map.Entry<String, String> entry : imageTagMap.entrySet()) {
+			String pomProperty = entry.getKey();
+			String serviceKey = entry.getValue();
+			String resolvedVersion = pomProperties.getProperty(pomProperty);
+			if (resolvedVersion == null || resolvedVersion.isEmpty()) {
+				throw new Exception("pom property " + pomProperty
+						+ " has no value — versions-maven-plugin should have resolved it before release");
+			}
+			if (resolvedVersion.endsWith("-SNAPSHOT")) {
+				throw new Exception("pom property " + pomProperty + " is still a SNAPSHOT ("
+						+ resolvedVersion + ") — versions-maven-plugin with -DallowSnapshots=false"
+						+ " should have resolved it to a release version");
+			}
+
+			// Locate `  <serviceKey>:` line (exact 2-space indent)
+			String blockHeader = "  " + serviceKey + ":";
+			int blockLineIdx = -1;
+			for (int i = 0; i < lines.length; i++) {
+				if (lines[i].equals(blockHeader) || lines[i].startsWith(blockHeader + " ")) {
+					blockLineIdx = i;
+					break;
+				}
+			}
+			if (blockLineIdx < 0) {
+				throw new Exception("service block " + blockHeader
+						+ " not found in " + valuesYaml.getName());
+			}
+
+			// Scan forward for the `    tag:` line, stopping if we exit
+			// the block (dedent back to 2-space or less, non-blank)
+			int tagLineIdx = -1;
+			for (int i = blockLineIdx + 1; i < lines.length; i++) {
+				String line = lines[i];
+				if (line.startsWith("    tag:")) {
+					tagLineIdx = i;
+					break;
+				}
+				// End of block: next non-blank line at 2-space indent or less
+				if (!line.isEmpty() && !line.startsWith("    ") && !line.startsWith("\t")) {
+					break;
+				}
+			}
+			if (tagLineIdx < 0) {
+				throw new Exception("no `    tag:` line found under " + blockHeader
+						+ " in " + valuesYaml.getName());
+			}
+			lines[tagLineIdx] = "    tag: " + resolvedVersion;
+			getLog().info("values.yaml: " + serviceKey + ".tag = " + resolvedVersion
+					+ " (from " + pomProperty + ")");
+		}
+
+		writeFile(valuesYaml, String.join("\n", lines));
 	}
 
 	// Recursively finds files matching fileName under the project directory and

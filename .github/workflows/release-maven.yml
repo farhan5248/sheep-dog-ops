@@ -6,6 +6,11 @@ on:
       project:
         required: true
         type: string
+      preparation_goals:
+        description: 'Goals passed to the inner mvn deploy invocation. Comma-separated. Services override to deploy=qa; chart uses default.'
+        required: false
+        type: string
+        default: 'deploy,-DskipTests'
   workflow_dispatch:
     inputs:
       project:
@@ -22,10 +27,16 @@ on:
           - sheep-dog-svc-maven-plugin
           - sheep-dog-grammar
           - sheep-dog-mgmt-maven-plugin
+          - sheep-dog-chart
           - sheepdogasciidoc.parent
           - sheepdogcucumber.parent
           - sheepdogeclipseplugin.parent
           - sheep-dog-vscode-plugin
+      preparation_goals:
+        description: 'Goals passed to the inner mvn deploy invocation. Comma-separated.'
+        required: false
+        type: string
+        default: 'deploy,-DskipTests'
 jobs:
   build:
     runs-on: [farhan5248-runners]
@@ -42,6 +53,6 @@ jobs:
         git config --local user.email "${{ vars.ACTIONS_BOT_EMAIL }}"
     - name: Release
       working-directory: ./${{ inputs.project }}
-      run: mvn org.farhan:sheep-dog-mgmt-maven-plugin:release
+      run: mvn org.farhan:sheep-dog-mgmt-maven-plugin:release "-DpreparationGoals=${{ inputs.preparation_goals }}"
       env:
         GITHUB_TOKEN: ${{ github.token }}

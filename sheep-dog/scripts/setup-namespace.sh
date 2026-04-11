@@ -7,17 +7,22 @@
 #   - EKS:      run `aws eks update-kubeconfig --name <cluster> --region <r>`
 #               (the eks/setup-cluster.bat equivalent on Windows)
 #
-# Usage: setup-namespace.sh <namespace>
+# Usage: setup-namespace.sh <namespace> [chart-version]
+#
+# chart-version defaults to `latest` — the floating tag in the Nexus OCI
+# helm registry. Callers (qa, prod, pinned e2e) pass an explicit semver
+# like 0.2.2 to lock to a specific release.
 
 set -euo pipefail
 
 NAMESPACE="${1:-}"
-CHART_VERSION="0.2.1"
+CHART_VERSION="${2:-latest}"
 CHART_OCI="oci://nexus-docker.sheepdog.io/helm-hosted/sheep-dog"
 
 if [[ -z "$NAMESPACE" ]]; then
-    echo "Usage: setup-namespace.sh <namespace>"
-    echo "Example: setup-namespace.sh qa"
+    echo "Usage: setup-namespace.sh <namespace> [chart-version]"
+    echo "Example: setup-namespace.sh qa 0.2.2"
+    echo "Example: setup-namespace.sh dev          (defaults to latest)"
     exit 1
 fi
 
