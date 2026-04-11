@@ -37,7 +37,10 @@ echo Enabling ingress addon...
 minikube addons enable ingress
 
 echo Waiting for ingress controller to be ready...
-C:\Windows\System32\timeout.exe /t 30 /nobreak >nul
+REM `timeout /t` rejects redirected stdin, which happens when the .bat is
+REM launched via `cmd /c` from a non-TTY parent (e.g. git-bash). `ping` is
+REM the portable sleep on Windows that works in any shell context.
+ping -n 31 127.0.0.1 >nul
 
 echo Patching ingress-nginx-controller to LoadBalancer...
 kubectl patch svc ingress-nginx-controller -n ingress-nginx -p "{\"spec\":{\"type\":\"LoadBalancer\"}}"

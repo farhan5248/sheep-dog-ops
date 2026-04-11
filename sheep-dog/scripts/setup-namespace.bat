@@ -80,8 +80,9 @@ REM EKS populates ingress[0].hostname (ELB DNS name); minikube populates
 REM ingress[0].ip (127.0.0.1 via tunnel). Check both so the script is
 REM distribution-agnostic.
 REM
-REM Absolute path to timeout.exe because git-bash coreutils `timeout` can
-REM shadow the Windows one via PATH when cmd is spawned from bash.
+REM `ping` is used as the sleep because `timeout /t` rejects redirected
+REM stdin, which happens when the .bat is launched via `cmd /c` from a
+REM non-TTY parent (e.g. git-bash).
 set SERVICE_URL=
 for /l %%i in (1,1,30) do (
     for /f "delims=" %%h in ('kubectl get ingress sheep-dog-ingress -n %NAMESPACE% -o jsonpath^="{.status.loadBalancer.ingress[0].hostname}"') do set SERVICE_URL=%%h
@@ -90,7 +91,7 @@ for /l %%i in (1,1,30) do (
     )
     if not "!SERVICE_URL!"=="" goto :got_url
     echo Waiting for Ingress address... attempt %%i/30
-    C:\Windows\System32\timeout.exe /t 10 /nobreak >nul
+    ping -n 11 127.0.0.1 >nul
 )
 :got_url
 echo Service URL: %SERVICE_URL%
