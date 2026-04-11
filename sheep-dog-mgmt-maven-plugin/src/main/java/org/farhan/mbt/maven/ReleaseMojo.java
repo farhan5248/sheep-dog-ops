@@ -340,7 +340,20 @@ public class ReleaseMojo extends AbstractMojo {
 		List<File> filteredList = fileList.stream().filter(f -> (f.getName().contentEquals(fileName)))
 				.collect(Collectors.toList());
 		for (File f : filteredList) {
-			writeFile(f, readFile(f).replace(currentVersionSearchTerm, nextVersionSearchTerm));
+			String content = readFile(f);
+			// For pom.xml, replace only the first occurrence so we update the
+			// top-level project <version> without touching plugin self-references
+			// in <build><plugins>, which otherwise match the same literal.
+			if (fileName.equals("pom.xml")) {
+				int idx = content.indexOf(currentVersionSearchTerm);
+				if (idx >= 0) {
+					content = content.substring(0, idx) + nextVersionSearchTerm
+							+ content.substring(idx + currentVersionSearchTerm.length());
+				}
+			} else {
+				content = content.replace(currentVersionSearchTerm, nextVersionSearchTerm);
+			}
+			writeFile(f, content);
 		}
 	}
 
