@@ -1,4 +1,4 @@
-name: Forward Engineer
+name: Smoke Test
 
 on:
   workflow_call:
@@ -15,21 +15,27 @@ on:
         default: 'localhost'
 
 jobs:
-  forward-engineer:
+  smoke-test:
     runs-on: [farhan5248-runners]
     permissions:
       contents: read
       packages: read
     steps:
+      - name: Checkout sheep-dog-ops
+        uses: actions/checkout@v4
+        with:
+          path: sheep-dog-ops
       - name: Checkout sheep-dog-specs
         uses: actions/checkout@v4
         with:
           repository: farhan5248/sheep-dog-specs
+          path: sheep-dog-specs
       - name: Set up JDK 21
         run: echo "JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64" >> $GITHUB_ENV
-      - name: Forward engineer
-        working-directory: sheep-dog-features
-        run: |
-          mvn org.farhan:sheep-dog-svc-maven-plugin:asciidoctor-to-uml -Dtags="svc-maven-plugin" -Dhost="${{ inputs.host }}"
+      - name: Smoke test
+        # Both repos are checked out as siblings under $GITHUB_WORKSPACE, so
+        # smoke-test.sh's default relative path to sheep-dog-features resolves
+        # correctly without needing the optional features-dir arg.
+        run: bash sheep-dog-ops/sheep-dog/scripts/smoke-test.sh "${{ inputs.host }}"
         env:
           GITHUB_TOKEN: ${{ github.token }}

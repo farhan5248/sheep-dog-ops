@@ -40,8 +40,8 @@ echo "Current kubectl context: $(kubectl config current-context)"
 # `helm registry login nexus-docker.sheepdog.io` already done,
 # mkcert root CA trusted.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TARGET_DIR="$SCRIPT_DIR/../target"
-mkdir -p "$TARGET_DIR"
+mkdir -p "$SCRIPT_DIR/../target"
+TARGET_DIR="$(cd "$SCRIPT_DIR/../target" && pwd)"
 rm -rf "$TARGET_DIR/sheep-dog"
 
 echo "Pulling sheep-dog umbrella helm chart from Nexus OCI..."
@@ -106,6 +106,12 @@ else
 fi
 
 kubectl get services -n "$NAMESPACE"
+
+# Write SERVICE_URL to a file so parent shells (bash or cmd wrappers that
+# invoke this script as a child process) can recover the ingress URL.
+# Child env vars don't leak up to the parent, so file-based handoff is the
+# portable mechanism.
+echo "$SERVICE_URL" > "$TARGET_DIR/service_url.txt"
 
 # Emit GitHub Actions output if running under Actions.
 if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
