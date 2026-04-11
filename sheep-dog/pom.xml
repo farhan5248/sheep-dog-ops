@@ -27,11 +27,6 @@
         <sheep-dog-asciidoc-api-svc.version>1.6-SNAPSHOT</sheep-dog-asciidoc-api-svc.version>
         <sheep-dog-cucumber-gen-svc.version>1.6-SNAPSHOT</sheep-dog-cucumber-gen-svc.version>
         <sheep-dog-mcp-svc.version>1.7-SNAPSHOT</sheep-dog-mcp-svc.version>
-
-        <!-- Plugin versions -->
-        <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
-        <sheep-dog-mgmt-maven-plugin.version>1.30-SNAPSHOT</sheep-dog-mgmt-maven-plugin.version>
-        <helm-maven-plugin.version>6.13.0</helm-maven-plugin.version>
     </properties>
 
     <scm>
@@ -98,7 +93,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
-                <version>${versions-maven-plugin.version}</version>
+                <version>2.16.2</version>
                 <configuration>
                     <includes>
                         <include>org.farhan:*:*</include>
@@ -108,7 +103,7 @@
             <plugin>
                 <groupId>org.farhan</groupId>
                 <artifactId>sheep-dog-mgmt-maven-plugin</artifactId>
-                <version>${sheep-dog-mgmt-maven-plugin.version}</version>
+                <version>1.30-SNAPSHOT</version>
                 <configuration>
                     <!-- Map each pom property name to the service block
                          key under `images:` in values.yaml. The mojo
@@ -125,7 +120,7 @@
             <plugin>
                 <groupId>io.kokuwa.maven</groupId>
                 <artifactId>helm-maven-plugin</artifactId>
-                <version>${helm-maven-plugin.version}</version>
+                <version>6.13.0</version>
                 <configuration>
                     <chartDirectory>${project.basedir}/helm/sheep-dog</chartDirectory>
                     <!-- Override Chart.yaml's version+appVersion with the
