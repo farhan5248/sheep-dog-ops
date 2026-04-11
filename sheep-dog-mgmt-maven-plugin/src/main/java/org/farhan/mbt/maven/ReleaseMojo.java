@@ -63,10 +63,20 @@ public class ReleaseMojo extends AbstractMojo {
 			runOrFail(git, workingDir, "pull");
 
 			// Resolve SNAPSHOT dependency properties to release versions so the
-			// released artifact depends on stable releases, not moving targets
+			// released artifact depends on stable releases, not moving targets.
+			// -DallowDowngrade=true is required because in a multi-repo ecosystem
+			// deps release independently and this pom's SNAPSHOTs are commonly
+			// AHEAD of the latest releases in Nexus (e.g. pom has 1.10-SNAPSHOT,
+			// Nexus latest release is 1.9). Without allowDowngrade, maven's
+			// update-properties leaves the SNAPSHOT in place because the existing
+			// version is "newer" from a semver standpoint, and the released
+			// artifact ends up depending on a SNAPSHOT. With allowDowngrade, it
+			// picks the latest available release regardless — which is what
+			// "release" means: pin to stable, immutable, shippable today. See #239.
 			runOrFail(mvn, workingDir,
 					"org.codehaus.mojo:versions-maven-plugin:update-properties",
-					"-DallowSnapshots=false");
+					"-DallowSnapshots=false",
+					"-DallowDowngrade=true");
 
 			// Only release if there's a reason to: either a dependency got a new
 			// release version (pom changed above), or someone committed real changes
@@ -160,10 +170,6 @@ public class ReleaseMojo extends AbstractMojo {
 		}
 	}
 
-	// After update-properties resolves SNAPSHOTs to releases, any pom.xml diff
-	// means a dependency has a new release version. We don't use -DallowDowngrade
-	// so update-properties only changes a property if a genuinely newer release
-	// exists (e.g. 1.50-SNAPSHOT won't downgrade to 1.49).
 	private boolean hasUncommittedChanges(GitRunner git, String workingDir) throws Exception {
 		int exitCode = git.run(workingDir, "diff", "--quiet", "HEAD", "--", ".", ":(exclude)*.bat");
 		return exitCode != 0;
