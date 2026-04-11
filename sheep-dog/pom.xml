@@ -24,9 +24,9 @@
              these to the latest releases in Nexus on `mvn ...:release`.
              sheep-dog-mgmt then reads the resolved values from project
              properties and writes them into values.yaml via imageTagMap. -->
-        <sheep-dog-asciidoc-api-svc.version>1.8-SNAPSHOT</sheep-dog-asciidoc-api-svc.version>
-        <sheep-dog-cucumber-gen-svc.version>1.7-SNAPSHOT</sheep-dog-cucumber-gen-svc.version>
-        <sheep-dog-mcp-svc.version>1.8-SNAPSHOT</sheep-dog-mcp-svc.version>
+        <sheep-dog-asciidoc-api-svc.version>1.7</sheep-dog-asciidoc-api-svc.version>
+        <sheep-dog-cucumber-gen-svc.version>1.6</sheep-dog-cucumber-gen-svc.version>
+        <sheep-dog-mcp-svc.version>1.7</sheep-dog-mcp-svc.version>
     </properties>
 
     <scm>
