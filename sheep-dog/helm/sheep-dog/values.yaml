@@ -14,15 +14,15 @@ images:
     pullPolicy: IfNotPresent
   asciidocApi:
     repository: nexus-docker.sheepdog.io/sheep-dog-asciidoc-api-svc
-    tag: 1.9
+    tag: 1.10
     pullPolicy: Always
   cucumberGen:
     repository: nexus-docker.sheepdog.io/sheep-dog-cucumber-gen-svc
-    tag: 1.8
+    tag: 1.9
     pullPolicy: Always
   mcp:
     repository: nexus-docker.sheepdog.io/sheep-dog-mcp-svc
-    tag: 1.9
+    tag: 1.10
     pullPolicy: Always
 
 # Ingress host for the sheep-dog ingress.
