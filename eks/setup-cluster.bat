@@ -3,20 +3,20 @@ setlocal enabledelayedexpansion
 echo %time%
 echo Creating AWS EKS cluster (CloudFormation + OIDC + EBS CSI + ingress-nginx)
 
-set SUFFIX=%1
+set NAMESPACE=%1
 set BASE_STACK_NAME=sheep-dog-aws
 set REGION=us-east-1
 set ACCOUNT_ID=013372624673
 
-if "%SUFFIX%"=="" (
-    echo Usage: setup-cluster.bat [suffix]
-    echo Example with suffix: setup-cluster.bat 1
+if "%NAMESPACE%"=="" (
+    echo Usage: setup-cluster.bat [namespace]
+    echo Example: setup-cluster.bat prod
     exit /b 1
 ) else (
-    set STACK_NAME=%BASE_STACK_NAME%-%SUFFIX%
+    set STACK_NAME=%BASE_STACK_NAME%-%NAMESPACE%
 )
 
-echo Using stack name with suffix: %STACK_NAME%
+echo Using stack name: %STACK_NAME%
 
 echo Checking if AWS CLI is installed...
 aws --version

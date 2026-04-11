@@ -3,8 +3,8 @@ name: Setup Namespace
 on:
   workflow_call:
     inputs:
-      suffix:
-        description: 'Suffix for the stack name'
+      namespace:
+        description: 'Kubernetes namespace (also used as EKS stack suffix)'
         required: true
         type: string
     secrets:
@@ -18,10 +18,10 @@ on:
         value: ${{ jobs.setup-k8s.outputs.service_url }}
   workflow_dispatch:
     inputs:
-      suffix:
-        description: 'Suffix for the stack name'
+      namespace:
+        description: 'Kubernetes namespace (also used as EKS stack suffix)'
         required: true
-        default: '1'
+        default: 'prod'
 
 jobs:
   setup-k8s:
@@ -32,7 +32,7 @@ jobs:
     env:
       BASE_STACK_NAME: sheep-dog-aws
       REGION: us-east-1
-      NAMESPACE: prod
+      NAMESPACE: ${{ inputs.namespace }}
     outputs:
       service_url: ${{ steps.setup_namespace.outputs.service_url }}
 
@@ -49,7 +49,7 @@ jobs:
 
       - name: Get EKS Cluster Name from CloudFormation
         run: |
-          STACK_NAME="${BASE_STACK_NAME}-${{ inputs.suffix }}"
+          STACK_NAME="${BASE_STACK_NAME}-${{ inputs.namespace }}"
           CLUSTER_NAME=$(aws cloudformation describe-stacks \
             --stack-name "$STACK_NAME" \
             --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" \

@@ -19,10 +19,14 @@ if "%NAMESPACE%"=="" (
     exit /b 1
 )
 
-REM Default to the `latest` tag in the Nexus OCI helm registry. Callers
-REM (qa, prod, pinned e2e) pass an explicit semver like 0.2.2 to lock to
-REM a specific release.
-if "%CHART_VERSION%"=="" set CHART_VERSION=latest
+REM When CHART_VERSION is empty or "latest", omit helm's --version flag so
+REM helm pulls the newest available release. Helm's --version takes a
+REM semver constraint (not a docker-style "latest" tag) — passing "latest"
+REM literally fails with "improper constraint: latest". Callers (qa, prod,
+REM pinned e2e) can still pass an explicit semver like 0.2.2 to lock to a
+REM specific release.
+set CHART_VERSION_FLAG=
+if not "%CHART_VERSION%"=="" if /i not "%CHART_VERSION%"=="latest" set CHART_VERSION_FLAG=--version %CHART_VERSION%
 
 echo Checking if kubectl is installed...
 kubectl version --client
@@ -54,7 +58,7 @@ REM `..` components (SecureJoin rejects upward traversal).
 for %%I in ("%~dp0..\target") do set TARGET_DIR=%%~fI
 if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
 if exist "%TARGET_DIR%\sheep-dog" rmdir /s /q "%TARGET_DIR%\sheep-dog"
-helm pull %CHART_OCI% --version %CHART_VERSION% --untar --untardir "%TARGET_DIR%"
+helm pull %CHART_OCI% %CHART_VERSION_FLAG% --untar --untardir "%TARGET_DIR%"
 if %ERRORLEVEL% neq 0 (
     echo Failed to pull helm chart.
     exit /b 1
@@ -81,15 +85,31 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-echo Waiting for Ingress address to be assigned (up to 5 minutes)...
-REM EKS populates ingress[0].hostname (ELB DNS name); minikube populates
-REM ingress[0].ip (127.0.0.1 via tunnel). Check both so the script is
-REM distribution-agnostic.
+REM Derive the smoke-test target host in this priority order:
+REM   1. spec.rules[0].host on the Ingress — set directly from values-<env>.yaml
+REM      `ingress.host` (e.g. dev.sheepdog.io, qa.sheepdog.io). This is the
+REM      Host header the nginx ingress matches on, so smoke-test MUST use this
+REM      exact string or nginx returns 404 from the default backend.
+REM   2. status.loadBalancer.ingress[0].hostname — EKS ELB DNS name, used when
+REM      values-<env>.yaml deliberately leaves ingress.host empty (prod today).
+REM   3. status.loadBalancer.ingress[0].ip — minikube tunnel IP (127.0.0.1),
+REM      final fallback. Only reachable when no Host header rule applies.
+REM
+REM (1) is synchronous — it's on the spec, not the status, so no wait loop.
+REM (2)/(3) need the wait loop because the load balancer address is assigned
+REM asynchronously after the ingress is created.
 REM
 REM `ping` is used as the sleep because `timeout /t` rejects redirected
 REM stdin, which happens when the .bat is launched via `cmd /c` from a
 REM non-TTY parent (e.g. git-bash).
 set SERVICE_URL=
+for /f "delims=" %%h in ('kubectl get ingress sheep-dog-ingress -n %NAMESPACE% -o jsonpath^="{.spec.rules[0].host}"') do set SERVICE_URL=%%h
+if not "%SERVICE_URL%"=="" (
+    echo Using ingress host rule: %SERVICE_URL%
+    goto :got_url
+)
+
+echo Waiting for Ingress load-balancer address (up to 5 minutes)...
 for /l %%i in (1,1,30) do (
     for /f "delims=" %%h in ('kubectl get ingress sheep-dog-ingress -n %NAMESPACE% -o jsonpath^="{.status.loadBalancer.ingress[0].hostname}"') do set SERVICE_URL=%%h
     if "!SERVICE_URL!"=="" (

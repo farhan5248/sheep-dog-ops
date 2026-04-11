@@ -3,8 +3,8 @@ name: Teardown Namespace
 on:
   workflow_call:
     inputs:
-      suffix:
-        description: 'Suffix for the stack name'
+      namespace:
+        description: 'Kubernetes namespace (also used as EKS stack suffix)'
         required: true
         type: string
     secrets:
@@ -14,10 +14,10 @@ on:
         required: true
   workflow_dispatch:
     inputs:
-      suffix:
-        description: 'Suffix for the stack name'
+      namespace:
+        description: 'Kubernetes namespace (also used as EKS stack suffix)'
         required: true
-        default: '1'
+        default: 'prod'
 
 jobs:
   teardown-k8s:
@@ -27,7 +27,7 @@ jobs:
     env:
       BASE_STACK_NAME: sheep-dog-aws
       REGION: us-east-1
-      NAMESPACE: prod
+      NAMESPACE: ${{ inputs.namespace }}
 
     steps:
       - name: Checkout repository
@@ -43,7 +43,7 @@ jobs:
       - name: Set stack name
         id: stack
         run: |
-          echo "STACK_NAME=${BASE_STACK_NAME}-${{ inputs.suffix }}" >> $GITHUB_ENV
+          echo "STACK_NAME=${BASE_STACK_NAME}-${{ inputs.namespace }}" >> $GITHUB_ENV
 
       - name: Get EKS cluster name
         id: cluster

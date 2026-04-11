@@ -1,10 +1,10 @@
-name: Setup EKS
+name: Setup Cluster
 
 on:
   workflow_call:
     inputs:
-      suffix:
-        description: 'Suffix for the stack name'
+      namespace:
+        description: 'Kubernetes namespace (also used as EKS stack suffix)'
         required: true
         type: string
     secrets:
@@ -16,13 +16,13 @@ on:
         required: true
   workflow_dispatch:
     inputs:
-      suffix:
-        description: 'Suffix for the stack name'
+      namespace:
+        description: 'Kubernetes namespace (also used as EKS stack suffix)'
         required: true
-        default: '1'
+        default: 'prod'
 
 jobs:
-  setup-eks:
+  setup-cluster:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -46,7 +46,7 @@ jobs:
       - name: Set stack name
         id: stack
         run: |
-          echo "STACK_NAME=${BASE_STACK_NAME}-${{ inputs.suffix }}" >> $GITHUB_ENV
+          echo "STACK_NAME=${BASE_STACK_NAME}-${{ inputs.namespace }}" >> $GITHUB_ENV
 
       - name: Deploy CloudFormation stack for EKS
         run: |

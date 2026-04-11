@@ -3,20 +3,20 @@ setlocal enabledelayedexpansion
 echo %time%
 echo Tearing down AWS EKS cluster (ingress-nginx + CloudFormation stack)
 
-set SUFFIX=%1
+set NAMESPACE=%1
 set BASE_STACK_NAME=sheep-dog-aws
 set REGION=us-east-1
 set ACCOUNT_ID=013372624673
 
-if "%SUFFIX%"=="" (
-    echo Usage: teardown-cluster.bat [suffix]
-    echo Example with suffix: teardown-cluster.bat 1
+if "%NAMESPACE%"=="" (
+    echo Usage: teardown-cluster.bat [namespace]
+    echo Example: teardown-cluster.bat prod
     exit /b 1
 ) else (
-    set STACK_NAME=%BASE_STACK_NAME%-%SUFFIX%
+    set STACK_NAME=%BASE_STACK_NAME%-%NAMESPACE%
 )
 
-echo Using stack name with suffix: %STACK_NAME%
+echo Using stack name: %STACK_NAME%
 
 echo Checking if AWS CLI is installed...
 aws --version
@@ -43,8 +43,8 @@ if %ERRORLEVEL% neq 0 (
 echo Getting EKS cluster name...
 for /f "tokens=*" %%i in ('aws cloudformation describe-stacks --stack-name %STACK_NAME% --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" --output text --region %REGION%') do set CLUSTER_NAME=%%i
 
-REM ingress-nginx and its NLB are owned by the EKS layer (setup-eks installs
-REM them, teardown-eks removes them). Namespace teardown only removes the
+REM ingress-nginx and its NLB are owned by the cluster layer (setup-cluster
+REM installs them, teardown-cluster removes them). Namespace teardown only removes the
 REM sheep-dog helm release, so teardown-namespace + setup-namespace is a
 REM valid redeploy loop that keeps the NLB alive.
 if not "%CLUSTER_NAME%"=="" (

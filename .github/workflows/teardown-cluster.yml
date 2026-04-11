@@ -1,10 +1,10 @@
-name: Teardown EKS
+name: Teardown Cluster
 
 on:
   workflow_call:
     inputs:
-      suffix:
-        description: 'Suffix for the stack name'
+      namespace:
+        description: 'Kubernetes namespace (also used as EKS stack suffix)'
         required: true
         type: string
     secrets:
@@ -16,13 +16,13 @@ on:
         required: true
   workflow_dispatch:
     inputs:
-      suffix:
-        description: 'Suffix for the stack name'
+      namespace:
+        description: 'Kubernetes namespace (also used as EKS stack suffix)'
         required: true
-        default: '1'
+        default: 'prod'
 
 jobs:
-  teardown-eks:
+  teardown-cluster:
     runs-on: ubuntu-latest
     env:
       BASE_STACK_NAME: sheep-dog-aws
@@ -43,7 +43,7 @@ jobs:
       - name: Set stack name
         id: stack
         run: |
-          echo "STACK_NAME=${BASE_STACK_NAME}-${{ inputs.suffix }}" >> $GITHUB_ENV
+          echo "STACK_NAME=${BASE_STACK_NAME}-${{ inputs.namespace }}" >> $GITHUB_ENV
 
       - name: Get EKS cluster name
         id: cluster
@@ -60,8 +60,9 @@ jobs:
         run: |
           aws eks update-kubeconfig --name "$CLUSTER_NAME" --region $REGION
 
-      # ingress-nginx and its NLB are owned by the EKS layer (setup-eks
-      # installs them, teardown-eks removes them). Namespace teardown only
+      # ingress-nginx and its NLB are owned by the cluster layer
+      # (setup-cluster installs them, teardown-cluster removes them).
+      # Namespace teardown only
       # removes the sheep-dog helm release — teardown-namespace +
       # setup-namespace is a valid redeploy loop that keeps the NLB alive.
       - name: Delete ingress-nginx namespace (releases the NLB)
