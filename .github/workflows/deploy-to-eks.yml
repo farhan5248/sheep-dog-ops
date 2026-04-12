@@ -1,4 +1,4 @@
-name: Deploy with Create
+name: Deploy to EKS
 
 on:
   workflow_dispatch:
