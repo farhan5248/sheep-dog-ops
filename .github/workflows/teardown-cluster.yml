@@ -23,10 +23,9 @@ on:
 
 jobs:
   teardown-cluster:
-    runs-on: ubuntu-latest
+    # Self-hosted to match setup-cluster.yml and the namespace workflows.
+    runs-on: [self-hosted, farhan5248-runners, linux]
     env:
-      BASE_STACK_NAME: sheep-dog-aws
-      REGION: us-east-1
       ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
 
     steps:
@@ -38,84 +37,11 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.REGION }}
+          aws-region: us-east-1
 
-      - name: Set stack name
-        id: stack
-        run: |
-          echo "STACK_NAME=${BASE_STACK_NAME}-${{ inputs.namespace }}" >> $GITHUB_ENV
-
-      - name: Get EKS cluster name
-        id: cluster
-        run: |
-          CLUSTER_NAME=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" \
-            --output text \
-            --region $REGION)
-          echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
-
-      - name: Update kubeconfig (if cluster exists)
-        if: env.CLUSTER_NAME != ''
-        run: |
-          aws eks update-kubeconfig --name "$CLUSTER_NAME" --region $REGION
-
-      # ingress-nginx and its NLB are owned by the cluster layer
-      # (setup-cluster installs them, teardown-cluster removes them).
-      # Namespace teardown only
-      # removes the sheep-dog helm release — teardown-namespace +
-      # setup-namespace is a valid redeploy loop that keeps the NLB alive.
-      - name: Delete ingress-nginx namespace (releases the NLB)
-        if: env.CLUSTER_NAME != ''
-        run: |
-          kubectl delete namespace ingress-nginx --ignore-not-found=true --timeout=300s
-
-      - name: Wait for cluster load balancers to be deleted
-        if: env.CLUSTER_NAME != ''
-        run: |
-          for i in {1..30}; do
-            LB_COUNT=$(aws resourcegroupstaggingapi get-resources \
-              --resource-type-filters elasticloadbalancing:loadbalancer \
-              --tag-filters "Key=kubernetes.io/cluster/$CLUSTER_NAME,Values=owned" \
-              --query "length(ResourceTagMappingList)" \
-              --output text \
-              --region $REGION)
-            if [ "$LB_COUNT" = "0" ]; then
-              echo "All cluster load balancers deleted."
-              exit 0
-            fi
-            echo "Waiting for $LB_COUNT load balancer(s)... (attempt $i/30)"
-            sleep 10
-          done
-          echo "ERROR: Timed out waiting for load balancers to be deleted."
-          exit 1
-
-      - name: Delete EBS CSI driver IAM policy and role
-        run: |
-          ROLE_NAME=EBSCSIDriverRole
-          aws iam detach-role-policy --role-name $ROLE_NAME --policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy || echo "Policy may already be detached."
-          aws iam delete-role --role-name $ROLE_NAME || echo "Role may already be deleted."
-
-      - name: Get OIDC URL from EKS cluster
-        id: oidc
-        run: |
-          OIDC_URL=$(aws eks describe-cluster --name "$CLUSTER_NAME" --query "cluster.identity.oidc.issuer" --output text)
-          if [ -z "$OIDC_URL" ]; then
-            echo "Failed to get OIDC URL from EKS Cluster."
-            exit 1
-          fi
-          OIDC_PROVIDER_ID=$(basename "$OIDC_URL")
-          echo "OIDC_PROVIDER_ID=$OIDC_PROVIDER_ID" >> $GITHUB_ENV
-
-      - name: Delete OIDC provider
-        run: |
-          aws iam delete-open-id-connect-provider --open-id-connect-provider-arn arn:aws:iam::${ACCOUNT_ID}:oidc-provider/oidc.eks.${REGION}.amazonaws.com/id/${OIDC_PROVIDER_ID} || echo "OIDC provider may already be deleted."
-
-      - name: Delete CloudFormation stack
-        run: |
-          aws cloudformation delete-stack --stack-name "$STACK_NAME" --region $REGION
-          echo "Waiting for stack deletion to complete..."
-          aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME" --region $REGION
-
-      - name: Teardown completed
-        run: echo "Teardown completed successfully!"
+      # ingress-nginx deletion, LB drain wait, EBS CSI IAM role + OIDC
+      # provider cleanup, and CloudFormation stack delete are all delegated
+      # to the distribution-agnostic script so local Linux runs and CI
+      # share the same code path.
+      - name: Run eks/teardown-cluster.sh
+        run: bash eks/teardown-cluster.sh "${{ inputs.namespace }}"

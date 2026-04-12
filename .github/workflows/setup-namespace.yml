@@ -29,10 +29,6 @@ jobs:
     # where the helm chart is hosted. Cloud runners can't reach the LAN
     # Nexus until #218 (Let's Encrypt + public Nexus) lands.
     runs-on: [self-hosted, farhan5248-runners, linux]
-    env:
-      BASE_STACK_NAME: sheep-dog-aws
-      REGION: us-east-1
-      NAMESPACE: ${{ inputs.namespace }}
     outputs:
       service_url: ${{ steps.setup_namespace.outputs.service_url }}
 
@@ -45,25 +41,15 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.REGION }}
+          aws-region: us-east-1
 
-      - name: Get EKS Cluster Name from CloudFormation
-        run: |
-          STACK_NAME="${BASE_STACK_NAME}-${{ inputs.namespace }}"
-          CLUSTER_NAME=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" \
-            --output text \
-            --region $REGION)
-          echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
+      # Cluster-connect (describe-stacks + update-kubeconfig) is delegated
+      # to eks/select-cluster.sh so the local .bat wrappers and CI share the
+      # same code path. The helm work is delegated to setup-namespace.sh for
+      # the same reason.
+      - name: Select cluster
+        run: bash eks/select-cluster.sh "${{ inputs.namespace }}"
 
-      - name: Update kubeconfig
-        run: |
-          aws eks update-kubeconfig --name "$CLUSTER_NAME" --region $REGION
-
-      # The helm work is delegated to the distribution-agnostic script so
-      # local runs and CI share the same code path. The EKS-connect steps
-      # above are CI-only and stay in the workflow.
       - name: Run setup-namespace.sh
         id: setup_namespace
-        run: bash sheep-dog/scripts/setup-namespace.sh "$NAMESPACE"
+        run: bash sheep-dog/scripts/setup-namespace.sh "${{ inputs.namespace }}"

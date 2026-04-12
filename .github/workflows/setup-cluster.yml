@@ -23,13 +23,11 @@ on:
 
 jobs:
   setup-cluster:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: eks
+    # Self-hosted runner for LAN access to nexus-docker.sheepdog.io and to
+    # match the namespace workflows (single runner profile across the
+    # cluster-lifecycle + namespace chain).
+    runs-on: [self-hosted, farhan5248-runners, linux]
     env:
-      BASE_STACK_NAME: sheep-dog-aws
-      REGION: us-east-1
       ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
 
     steps:
@@ -41,103 +39,12 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.REGION }}
+          aws-region: us-east-1
 
-      - name: Set stack name
-        id: stack
-        run: |
-          echo "STACK_NAME=${BASE_STACK_NAME}-${{ inputs.namespace }}" >> $GITHUB_ENV
-
-      - name: Deploy CloudFormation stack for EKS
-        run: |
-          aws cloudformation deploy \
-            --template-file eks.yml \
-            --stack-name "$STACK_NAME" \
-            --capabilities CAPABILITY_IAM \
-            --region $REGION
-
-      - name: Get EKS cluster name
-        id: cluster
-        run: |
-          CLUSTER_NAME=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" \
-            --output text \
-            --region $REGION)
-          echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
-
-      - name: Get OIDC URL from EKS cluster
-        id: oidc
-        run: |
-          OIDC_URL=$(aws eks describe-cluster --name "$CLUSTER_NAME" --query "cluster.identity.oidc.issuer" --output text)
-          OIDC_PROVIDER_ID=$(basename "$OIDC_URL")
-          echo "OIDC_URL=$OIDC_URL" >> $GITHUB_ENV
-          echo "OIDC_PROVIDER_ID=$OIDC_PROVIDER_ID" >> $GITHUB_ENV
-
-      - name: Create OIDC provider in IAM
-        run: |
-          set -e
-          aws iam create-open-id-connect-provider \
-            --url "$OIDC_URL" \
-            --client-id-list sts.amazonaws.com \
-            --thumbprint-list 9e99a48a9960b14926bb7f3b02e22da2b0ab7280 || echo "OIDC provider may already exist, continuing..."
-
-      - name: Update trust policy file with OIDC provider ID and account ID
-        run: |
-          mkdir -p target
-          sed "s/OIDC_PROVIDER_ID/$OIDC_PROVIDER_ID/g; s/ACCOUNT_ID/$ACCOUNT_ID/g" oidc-policy.json > target/oidc-policy.json
-
-      - name: Create IAM role for EBS CSI driver
-        run: |
-          aws iam create-role \
-            --role-name EBSCSIDriverRole \
-            --assume-role-policy-document file://target/oidc-policy.json || echo "Role may already exist, continuing..."
-
-      - name: Attach AmazonEBSCSIDriverPolicy to the role
-        run: |
-          aws iam attach-role-policy \
-            --role-name EBSCSIDriverRole \
-            --policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy || echo "Policy may already be attached, continuing..."
-
-      - name: Create EBS CSI driver add-on in EKS
-        run: |
-          aws eks create-addon \
-            --cluster-name "$CLUSTER_NAME" \
-            --addon-name aws-ebs-csi-driver \
-            --service-account-role-arn arn:aws:iam::${ACCOUNT_ID}:role/EBSCSIDriverRole \
-            --addon-version v1.57.1-eksbuild.1 \
-            --resolve-conflicts OVERWRITE || echo "Addon may already exist, continuing..."
-
-      - name: Wait for EBS CSI driver add-on to become active (max 60s)
-        run: |
-          for i in {1..12}; do
-            STATUS=$(aws eks describe-addon --cluster-name "$CLUSTER_NAME" --addon-name aws-ebs-csi-driver --query "addon.status" --output text)
-            echo "Current status: $STATUS"
-            if [[ "$STATUS" == "ACTIVE" ]]; then
-              echo "EBS CSI driver add-on is now active."
-              exit 0
-            fi
-            echo "Waiting for EBS CSI driver add-on to become active... (Status: $STATUS)"
-            sleep 5
-          done
-          echo "Warning: Timed out waiting for EBS CSI driver add-on to become active. Check its status manually."
-
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v4
-        with:
-          version: 'latest'
-
-      - name: Update kubeconfig
-        run: |
-          aws eks update-kubeconfig --name "$CLUSTER_NAME" --region $REGION
-
-      - name: Install nginx-ingress-controller
-        run: |
-          kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.2/deploy/static/provider/aws/deploy.yaml
-
-      - name: Wait for nginx-ingress-controller to be ready
-        run: |
-          kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=300s
-
-      - name: Deployment completed
-        run: echo "Deployment completed successfully!"
+      # The cluster-lifecycle work (CloudFormation deploy, OIDC provider, EBS
+      # CSI role, ingress-nginx install, polling loops) is delegated to the
+      # distribution-agnostic script so local Linux runs and CI share the
+      # same code path. The checkout + AWS login steps above are CI-only and
+      # stay in the workflow.
+      - name: Run eks/setup-cluster.sh
+        run: bash eks/setup-cluster.sh "${{ inputs.namespace }}"

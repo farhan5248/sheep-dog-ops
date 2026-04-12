@@ -21,13 +21,8 @@ on:
 
 jobs:
   teardown-k8s:
-    # Self-hosted runner to stay consistent with setup-namespace.yml — same
-    # reasoning applies (Nexus LAN access, no kustomize dependency).
+    # Self-hosted runner to stay consistent with setup-namespace.yml.
     runs-on: [self-hosted, farhan5248-runners, linux]
-    env:
-      BASE_STACK_NAME: sheep-dog-aws
-      REGION: us-east-1
-      NAMESPACE: ${{ inputs.namespace }}
 
     steps:
       - name: Checkout repository
@@ -38,34 +33,17 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.REGION }}
+          aws-region: us-east-1
 
-      - name: Set stack name
-        id: stack
-        run: |
-          echo "STACK_NAME=${BASE_STACK_NAME}-${{ inputs.namespace }}" >> $GITHUB_ENV
+      # Cluster-connect delegated to eks/select-cluster.sh. Fails loud if
+      # the CloudFormation stack is missing — teardown is meaningful only
+      # against an existing cluster, so silent no-op tolerance is explicitly
+      # not wanted here.
+      - name: Select cluster
+        run: bash eks/select-cluster.sh "${{ inputs.namespace }}"
 
-      - name: Get EKS cluster name
-        id: cluster
-        run: |
-          CLUSTER_NAME=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" \
-            --output text \
-            --region $REGION)
-          echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
-
-      - name: Update kubeconfig (if cluster exists)
-        if: env.CLUSTER_NAME != ''
-        run: |
-          aws eks update-kubeconfig --name "$CLUSTER_NAME" --region $REGION
-
-      # The helm work is delegated to the distribution-agnostic script so
-      # local runs and CI share the same code path. The EKS-connect steps
-      # above are CI-only and stay in the workflow.
-      - name: Run teardown-namespace.sh (if cluster exists)
-        if: env.CLUSTER_NAME != ''
-        run: bash sheep-dog/scripts/teardown-namespace.sh "$NAMESPACE"
+      - name: Run teardown-namespace.sh
+        run: bash sheep-dog/scripts/teardown-namespace.sh "${{ inputs.namespace }}"
 
       - name: Teardown completed
         run: echo "Teardown completed successfully!"
