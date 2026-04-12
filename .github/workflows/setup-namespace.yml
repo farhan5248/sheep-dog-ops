@@ -45,6 +45,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Select EKS cluster
+        run: |
+          STACK_NAME="sheep-dog-aws-${{ inputs.namespace }}"
+          CLUSTER_NAME=$(aws cloudformation describe-stacks \
+              --stack-name "$STACK_NAME" \
+              --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" \
+              --output text \
+              --region us-east-1)
+          if [[ -z "$CLUSTER_NAME" ]]; then
+              echo "Failed to get EKS cluster name from stack $STACK_NAME."
+              exit 1
+          fi
+          aws eks update-kubeconfig --name "$CLUSTER_NAME" --region us-east-1
+
       - name: Run setup-namespace.sh
         id: setup_namespace
         run: bash sheep-dog/scripts/setup-namespace.sh "${{ inputs.namespace }}"
