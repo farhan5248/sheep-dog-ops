@@ -47,6 +47,11 @@ jobs:
     - uses: actions/checkout@v4
     - name: Set up JDK 21
       run: echo "JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64" >> $GITHUB_ENV
+    - name: Helm registry login (Nexus OCI)
+      run: |
+        echo "${{ secrets.NEXUS_PASSWORD }}" | helm registry login nexus-docker.sheepdog.io \
+          --username "${{ secrets.NEXUS_USER }}" \
+          --password-stdin
     - name: Set up Git
       run: |
         git config --local user.name "${{ vars.ACTIONS_BOT_NAME }}"
