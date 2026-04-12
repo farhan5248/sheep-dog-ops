@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 # Deploy the sheep-dog umbrella helm chart to a Kubernetes namespace.
 #
-# Kubernetes-distribution-agnostic: caller must point kubectl at the target
-# cluster before running this script.
-#   - minikube: minikube/setup-cluster.sh (or setup-cluster-local.sh)
-#   - EKS:      run `aws eks update-kubeconfig --name <cluster> --region <r>`
-#               (the eks/setup-cluster.bat equivalent on Windows)
+# Sets the kubectl context to the EKS cluster for the given namespace
+# (derived from CloudFormation stack sheep-dog-aws-<namespace>).
+# Requires AWS CLI configured with valid credentials.
 #
 # Usage: setup-namespace.sh <namespace> [chart-version]
 #
@@ -22,6 +20,7 @@ NAMESPACE="${1:-}"
 # "improper constraint: latest".
 CHART_VERSION="${2:-}"
 CHART_OCI="oci://nexus-docker.sheepdog.io/helm-hosted/sheep-dog"
+REGION="us-east-1"
 
 if [[ -z "$NAMESPACE" ]]; then
     echo "Usage: setup-namespace.sh <namespace> [chart-version]"
@@ -30,9 +29,23 @@ if [[ -z "$NAMESPACE" ]]; then
     exit 1
 fi
 
+command -v aws     >/dev/null 2>&1 || { echo "aws CLI is not installed."; exit 1; }
 command -v kubectl >/dev/null 2>&1 || { echo "kubectl is not installed."; exit 1; }
 command -v helm    >/dev/null 2>&1 || { echo "helm is not installed.";    exit 1; }
 
+echo "Selecting EKS cluster for namespace $NAMESPACE..."
+STACK_NAME="sheep-dog-aws-${NAMESPACE}"
+CLUSTER_NAME=$(aws cloudformation describe-stacks \
+    --stack-name "$STACK_NAME" \
+    --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" \
+    --output text \
+    --region "$REGION")
+if [[ -z "$CLUSTER_NAME" ]]; then
+    echo "Failed to get EKS cluster name from stack $STACK_NAME."
+    echo "Provision the cluster first with eks/setup-cluster.sh $NAMESPACE."
+    exit 1
+fi
+aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$REGION"
 echo "Current kubectl context: $(kubectl config current-context)"
 
 # Chart version hardcoded until #32 Phase 3 introduces version-<env>.txt files.

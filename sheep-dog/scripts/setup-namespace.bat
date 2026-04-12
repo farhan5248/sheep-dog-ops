@@ -3,10 +3,9 @@ setlocal enabledelayedexpansion
 echo %time%
 echo Deploying sheep-dog umbrella helm chart to a Kubernetes namespace
 echo.
-echo This script is Kubernetes-distribution-agnostic. Point kubectl at your
-echo target cluster BEFORE running it:
-echo   - minikube: minikube/setup-cluster.bat or setup-cluster-local.bat
-echo   - EKS:      eks/setup-cluster.bat ^(which runs aws eks update-kubeconfig^)
+echo Caller must set the kubectl context before running this script:
+echo   - minikube: kubectl config use-context minikube
+echo   - EKS:      aws eks update-kubeconfig --name ^<cluster^> --region ^<r^>
 
 set NAMESPACE=%1
 set CHART_VERSION=%2

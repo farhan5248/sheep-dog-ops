@@ -3,8 +3,7 @@ setlocal enabledelayedexpansion
 echo %time%
 echo Uninstalling sheep-dog umbrella helm release from a Kubernetes namespace
 echo.
-echo This script is Kubernetes-distribution-agnostic. Point kubectl at your
-echo target cluster BEFORE running it.
+echo Caller must set the kubectl context before running this script.
 
 set NAMESPACE=%1
 
