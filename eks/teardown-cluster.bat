@@ -6,7 +6,6 @@ echo Tearing down AWS EKS cluster (ingress-nginx + CloudFormation stack)
 set NAMESPACE=%1
 set BASE_STACK_NAME=sheep-dog-aws
 set REGION=us-east-1
-set ACCOUNT_ID=013372624673
 
 if "%NAMESPACE%"=="" (
     echo Usage: teardown-cluster.bat [namespace]
@@ -14,6 +13,14 @@ if "%NAMESPACE%"=="" (
     exit /b 1
 ) else (
     set STACK_NAME=%BASE_STACK_NAME%-%NAMESPACE%
+)
+
+REM ACCOUNT_ID must be set as a system environment variable. Mechanical
+REM parity with eks/teardown-cluster.sh.
+if "%ACCOUNT_ID%"=="" (
+    echo ACCOUNT_ID environment variable is not set.
+    echo Set it as a persistent Windows env var to your AWS account ID.
+    exit /b 1
 )
 
 echo Using stack name: %STACK_NAME%

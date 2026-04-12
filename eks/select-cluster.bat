@@ -54,6 +54,5 @@ if %ERRORLEVEL% neq 0 (
 
 echo Current kubectl context:
 kubectl config current-context
-echo K8S_CLUSTER=eks
 echo %time%
-endlocal & set K8S_CLUSTER=eks
+endlocal
