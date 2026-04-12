@@ -1,0 +1,53 @@
+name: Select Cluster
+
+on:
+  workflow_call:
+    inputs:
+      cluster:
+        description: 'Cluster type (minikube or eks)'
+        required: false
+        type: string
+        default: 'minikube'
+      namespace:
+        description: 'Kubernetes namespace'
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_SECRET_ACCESS_KEY:
+        required: false
+  workflow_dispatch:
+    inputs:
+      cluster:
+        description: 'Cluster type'
+        required: true
+        type: choice
+        options:
+          - minikube
+          - eks
+        default: 'minikube'
+      namespace:
+        description: 'Kubernetes namespace'
+        required: true
+        default: 'dev'
+
+jobs:
+  select-cluster:
+    runs-on: [self-hosted, farhan5248-runners, linux]
+    steps:
+      - name: Checkout sheep-dog-ops
+        uses: actions/checkout@v4
+        with:
+          repository: farhan5248/sheep-dog-ops
+
+      - name: Set up AWS CLI
+        if: inputs.cluster == 'eks'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Select cluster
+        run: bash "${{ inputs.cluster }}/select-cluster.sh" "${{ inputs.namespace }}"

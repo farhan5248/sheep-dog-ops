@@ -18,14 +18,21 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
 
-  setup-namespace:
+  select-cluster:
     needs: setup-cluster
-    uses: ./.github/workflows/setup-namespace.yml
+    uses: ./.github/workflows/select-cluster.yml
     with:
+      cluster: eks
       namespace: ${{ inputs.namespace }}
     secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  setup-namespace:
+    needs: select-cluster
+    uses: ./.github/workflows/setup-namespace.yml
+    with:
+      namespace: ${{ inputs.namespace }}
 
   smoke-test:
     needs: setup-namespace
@@ -38,9 +45,6 @@ jobs:
     uses: ./.github/workflows/teardown-namespace.yml
     with:
       namespace: ${{ inputs.namespace }}
-    secrets:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
   teardown-cluster:
     needs: teardown-namespace

@@ -30,12 +30,6 @@ jobs:
       uses: actions/checkout@v4
     - name: Set up JDK 21
       run: echo "JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64" >> $GITHUB_ENV
-    - name: Select minikube cluster
-      # The runner's kubectl context may be pointing elsewhere from a prior
-      # workflow run (e.g. EKS from Phase 2 setup-namespace). jkube uses the
-      # current context for image push + deploy, so explicitly re-select
-      # minikube before any mvn docker work.
-      run: bash minikube/select-cluster.sh dev
     - name: Run Maven
       working-directory: ./${{ inputs.project }}
       run: |

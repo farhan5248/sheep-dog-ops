@@ -7,11 +7,6 @@ on:
         description: 'Kubernetes namespace (also used as EKS stack suffix)'
         required: true
         type: string
-    secrets:
-      AWS_ACCESS_KEY_ID:
-        required: true
-      AWS_SECRET_ACCESS_KEY:
-        required: true
     outputs:
       service_url:
         description: "The service URL"
@@ -33,22 +28,10 @@ jobs:
       service_url: ${{ steps.setup_namespace.outputs.service_url }}
 
     steps:
-      - name: Checkout repository
+      - name: Checkout sheep-dog-ops
         uses: actions/checkout@v4
-
-      - name: Set up AWS CLI
-        uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      # Cluster-connect (describe-stacks + update-kubeconfig) is delegated
-      # to eks/select-cluster.sh so the local .bat wrappers and CI share the
-      # same code path. The helm work is delegated to setup-namespace.sh for
-      # the same reason.
-      - name: Select cluster
-        run: bash eks/select-cluster.sh "${{ inputs.namespace }}"
+          repository: farhan5248/sheep-dog-ops
 
       - name: Run setup-namespace.sh
         id: setup_namespace

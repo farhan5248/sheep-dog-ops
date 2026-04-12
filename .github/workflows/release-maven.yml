@@ -51,11 +51,6 @@ jobs:
       run: |
         git config --local user.name "${{ vars.ACTIONS_BOT_NAME }}"
         git config --local user.email "${{ vars.ACTIONS_BOT_EMAIL }}"
-    - name: Select minikube cluster
-      # Service releases drive jkube docker push + deploy against the
-      # runner's kubectl context. Explicitly re-select minikube in case the
-      # runner's context got left pointing elsewhere by a prior workflow.
-      run: bash minikube/select-cluster.sh dev
     - name: Release
       working-directory: ./${{ inputs.project }}
       run: mvn org.farhan:sheep-dog-mgmt-maven-plugin:release "-DpreparationGoals=${{ inputs.preparation_goals }}"
