@@ -1,0 +1,28 @@
+=== ubuntu-mac kernel/wifi recovery ===
+
+--- A. At the grub> prompt (after shutdown + power-on + tapping Esc) ---
+
+set root=(hd1,gpt2)
+linux /boot/vmlinuz-6.14.0-37-generic root=/dev/sda2 ro
+initrd /boot/initrd.img-6.14.0-37-generic
+boot
+
+Notes:
+- MUST shut down fully and power on; a plain `reboot` won't let you intercept.
+- Tap Esc frequently during POST.
+- Tab-complete the vmlinuz/initrd filenames if the version changes.
+- Disk is (hd1,gpt2), NOT hd0.
+
+--- B. Once booted into 6.14 in Ubuntu (wifi still down) ---
+
+uname -r                          # confirm 6.14.0-37-generic
+lsmod | grep wl                   # likely blank
+sudo dkms status                  # broadcom-sta should be 'added'
+sudo dkms install broadcom-sta/6.30.223.271 -k $(uname -r)
+sudo modprobe -r b43 ssb bcma
+sudo modprobe wl
+ip link show                      # should now show wl* interface
+
+Then reconnect via the network indicator, or:
+nmcli device wifi list
+nmcli device wifi connect "<SSID>" password "<password>"
