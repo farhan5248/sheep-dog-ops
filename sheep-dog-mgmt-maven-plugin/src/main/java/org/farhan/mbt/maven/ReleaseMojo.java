@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -73,15 +74,20 @@ public class ReleaseMojo extends AbstractMojo {
 			// artifact ends up depending on a SNAPSHOT. With allowDowngrade, it
 			// picks the latest available release regardless — which is what
 			// "release" means: pin to stable, immutable, shippable today. See #239.
+			File pomFile = new File(project.getBasedir(), "pom.xml");
+			Map<String, String> versionsBefore = extractVersionProperties(pomFile);
 			runOrFail(mvn, workingDir,
 					"org.codehaus.mojo:versions-maven-plugin:update-properties",
 					"-DallowSnapshots=false",
 					"-DallowDowngrade=true");
+			Map<String, String> versionsAfter = extractVersionProperties(pomFile);
 
-			// Only release if there's a reason to: either a dependency got a new
-			// release version (pom changed above), or someone committed real changes
-			// since the last release cycle
-			boolean dependencyChange = hasUncommittedChanges(git, workingDir);
+			// A real dependency change is a version UPGRADE. allowDowngrade also
+			// rewrites SNAPSHOT-ahead-of-release down to the latest release (e.g.
+			// 1.10-SNAPSHOT -> 1.9) every run; if we counted that as a change
+			// we'd cycle forever because the post-release SNAPSHOT bump puts it
+			// back and the next run sees the same "change" again. See #240.
+			boolean dependencyChange = hasUpgradedDependencies(versionsBefore, versionsAfter);
 			boolean sourceChange = hasSourceChanges(git, workingDir);
 
 			if (!dependencyChange && !sourceChange) {
@@ -170,9 +176,65 @@ public class ReleaseMojo extends AbstractMojo {
 		}
 	}
 
-	private boolean hasUncommittedChanges(GitRunner git, String workingDir) throws Exception {
-		int exitCode = git.run(workingDir, "diff", "--quiet", "HEAD", "--", ".", ":(exclude)*.bat");
-		return exitCode != 0;
+	// Parses top-level <properties> entries whose name ends in .version from
+	// pom.xml and returns name -> value. Used to snapshot dependency versions
+	// before and after versions-maven-plugin:update-properties so we can tell
+	// upgrades apart from allowDowngrade-driven downgrades.
+	protected Map<String, String> extractVersionProperties(File pomFile) throws Exception {
+		Map<String, String> versions = new LinkedHashMap<>();
+		if (!pomFile.exists()) {
+			return versions;
+		}
+		String content = readFile(pomFile);
+		Pattern p = Pattern.compile("<([\\w][\\w.-]*\\.version)>([^<]+)</\\1>");
+		Matcher m = p.matcher(content);
+		while (m.find()) {
+			versions.put(m.group(1), m.group(2).trim());
+		}
+		return versions;
+	}
+
+	private boolean hasUpgradedDependencies(Map<String, String> before, Map<String, String> after) {
+		for (Map.Entry<String, String> e : after.entrySet()) {
+			String oldV = before.get(e.getKey());
+			if (oldV == null) {
+				continue;
+			}
+			if (isUpgrade(oldV, e.getValue())) {
+				getLog().info("Dependency upgrade: " + e.getKey() + " " + oldV + " -> " + e.getValue());
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// Component-wise numeric comparison after stripping -SNAPSHOT. Returns
+	// true only when newV is strictly greater than oldV. Non-numeric parts
+	// compare as 0, which is safe: unrecognized version schemes won't be
+	// treated as upgrades and won't trigger a spurious release.
+	protected boolean isUpgrade(String oldV, String newV) {
+		String[] oldParts = oldV.replace("-SNAPSHOT", "").split("\\.");
+		String[] newParts = newV.replace("-SNAPSHOT", "").split("\\.");
+		int len = Math.max(oldParts.length, newParts.length);
+		for (int i = 0; i < len; i++) {
+			int o = i < oldParts.length ? parseIntSafe(oldParts[i]) : 0;
+			int n = i < newParts.length ? parseIntSafe(newParts[i]) : 0;
+			if (n > o) {
+				return true;
+			}
+			if (n < o) {
+				return false;
+			}
+		}
+		return false;
+	}
+
+	private int parseIntSafe(String s) {
+		try {
+			return Integer.parseInt(s);
+		} catch (NumberFormatException e) {
+			return 0;
+		}
 	}
 
 	// Finds the most recent [Release] commit in this directory and checks if any
