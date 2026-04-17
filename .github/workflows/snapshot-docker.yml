@@ -30,9 +30,17 @@ jobs:
       run: echo "JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64" >> $GITHUB_ENV
     - name: Helm registry login (Nexus OCI)
       run: |
-        echo "${{ secrets.NEXUS_PASSWORD }}" | helm registry login nexus-docker.sheepdog.io \
-          --username "${{ secrets.NEXUS_USER }}" \
-          --password-stdin
+        for i in 1 2 3 4 5; do
+          if echo "${{ secrets.NEXUS_PASSWORD }}" | timeout 30 helm registry login nexus-docker.sheepdog.io \
+               --username "${{ secrets.NEXUS_USER }}" \
+               --password-stdin; then
+            echo "Login succeeded on attempt $i"
+            exit 0
+          fi
+          echo "Attempt $i failed"
+          [ $i -lt 5 ] && sleep 10
+        done
+        echo "All attempts failed"; exit 1
     - name: Run Maven
       working-directory: ./${{ inputs.project }}
       run: |
