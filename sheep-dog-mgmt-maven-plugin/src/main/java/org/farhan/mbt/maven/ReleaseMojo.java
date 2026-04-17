@@ -92,6 +92,10 @@ public class ReleaseMojo extends AbstractMojo {
 
 			if (!dependencyChange && !sourceChange) {
 				getLog().info("No dependency changes and no source changes since last release, skipping");
+				// update-properties may have rewritten pom.xml (allowDowngrade
+				// resolves SNAPSHOTs to older releases every run). Since we're
+				// not releasing, revert so the working tree stays clean.
+				runOrFail(git, workingDir, "reset", "--hard", "HEAD");
 				return;
 			}
 
