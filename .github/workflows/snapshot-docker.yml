@@ -14,11 +14,9 @@ on:
         required: true
         type: choice
         options:
-          - darmok-maven-plugin
-          - sheep-dog-mcp-svc
           - sheep-dog-asciidoc-api-svc
           - sheep-dog-cucumber-gen-svc
-          - sheep-dog-svc-maven-plugin
+          - sheep-dog-mcp-svc
 jobs:
   build:
     runs-on: [farhan5248-runners]
@@ -38,7 +36,19 @@ jobs:
     - name: Run Maven
       working-directory: ./${{ inputs.project }}
       run: |
-        mvn -U deploy "-Dsheepdog.namespace=dev"
+        mvn -U install "-Dsheepdog.namespace=dev"
       env:
         GITHUB_TOKEN: ${{ github.token }}
         MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+    - name: Deploy stubs jar
+      working-directory: ./${{ inputs.project }}
+      run: |
+        mvn deploy:deploy-file \
+          -DpomFile=pom.xml \
+          -Dfile=$(ls target/*-stubs.jar) \
+          -Dclassifier=stubs \
+          -Dpackaging=jar \
+          -DrepositoryId=nexus-snapshots \
+          -Durl=https://nexus.sheepdog.io/repository/maven-snapshots/
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
