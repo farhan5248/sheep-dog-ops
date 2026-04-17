@@ -43,12 +43,16 @@ jobs:
     - name: Deploy stubs jar
       working-directory: ./${{ inputs.project }}
       run: |
-        mvn deploy:deploy-file \
-          -DpomFile=pom.xml \
-          -Dfile=$(ls target/*-stubs.jar) \
-          -Dclassifier=stubs \
-          -Dpackaging=jar \
-          -DrepositoryId=nexus-snapshots \
-          -Durl=https://nexus.sheepdog.io/repository/maven-snapshots/
+        if ls target/*-stubs.jar 1> /dev/null 2>&1; then
+          mvn deploy:deploy-file \
+            -DpomFile=pom.xml \
+            -Dfile=$(ls target/*-stubs.jar) \
+            -Dclassifier=stubs \
+            -Dpackaging=jar \
+            -DrepositoryId=nexus-snapshots \
+            -Durl=https://nexus.sheepdog.io/repository/maven-snapshots/
+        else
+          echo "No stubs jar — skipping"
+        fi
       env:
         GITHUB_TOKEN: ${{ github.token }}
