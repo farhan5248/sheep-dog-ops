@@ -1,0 +1,12 @@
+# Step 3a: plain Grafana install, all defaults, no plugins/datasources/dashboards.
+# Everything else goes in downstream steps (3b provisioning loop, 3c CSV transport,
+# 3d Infinity datasource, 3e KensoBI SPC panel).
+
+grafana:
+  service:
+    type: ClusterIP
+
+  # Step 3a is "does Grafana come up". Persistence gets enabled in 3b when dashboards
+  # start mattering across restarts.
+  persistence:
+    enabled: false

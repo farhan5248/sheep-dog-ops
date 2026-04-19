@@ -1,0 +1,18 @@
+observability chart installed.
+
+Step 3a smoke test:
+
+1. kubectl -n {{ .Release.Namespace }} get pods
+
+2. kubectl -n {{ .Release.Namespace }} port-forward svc/{{ .Release.Name }}-grafana 3000:80
+
+3. Open http://localhost:3000 (user: admin, password: see command below)
+
+   kubectl -n {{ .Release.Namespace }} get secret {{ .Release.Name }}-grafana \
+     -o jsonpath='{.data.admin-password}' | base64 -d
+
+Upcoming steps (sheep-dog-main#252):
+- 3b: datasource + dashboard provisioning as code
+- 3c: CSV transport for Darmok metrics.csv
+- 3d: Infinity datasource plugin
+- 3e: KensoBI SPC panel plugin + XmR dashboard

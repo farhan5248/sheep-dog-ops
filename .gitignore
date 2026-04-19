@@ -1,5 +1,7 @@
 release.properties
 .vscode/settings.json
+# Helm subchart downloads — re-fetched from Chart.lock via `helm dependency update`
+**/helm/**/charts/*.tgz
 nul
 temp/*.*
 .venv/*
