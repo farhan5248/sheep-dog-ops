@@ -1,0 +1,13 @@
+# Binds to darmok-metrics-pv via matching storageClassName + accessModes + size.
+# Grafana mounts this PVC read-only (see values.yaml grafana.extraVolumes / extraVolumeMounts).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: darmok-metrics-pvc
+spec:
+  accessModes:
+    - ReadOnlyMany
+  storageClassName: darmok-metrics-hostpath
+  resources:
+    requests:
+      storage: 100Mi

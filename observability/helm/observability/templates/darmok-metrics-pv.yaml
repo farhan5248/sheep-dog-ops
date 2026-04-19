@@ -1,0 +1,23 @@
+# Static PV backed by the hostPath bind-mount at /mnt/darmok-metrics in the minikube VM,
+# which maps to C:\Users\Farhan\minikube-data\darmok-metrics on windows-minipc. Darmok
+# runs on the host and writes metrics.csv into that directory (set LOG_PATH to point at
+# it); Grafana in the cluster reads the same file via this PV.
+#
+# Mirrors sheep-dog-ops/nexus/pv.yaml; same rationale — survives `minikube delete` because
+# the host directory is untouched when the VM is destroyed.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: darmok-metrics-pv
+  labels:
+    app: darmok-metrics
+spec:
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: darmok-metrics-hostpath
+  hostPath:
+    path: /mnt/darmok-metrics
+    type: DirectoryOrCreate

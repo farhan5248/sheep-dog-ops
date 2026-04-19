@@ -1,10 +1,16 @@
 @echo off
 echo Starting minikube...
 REM On windows-desktop, mount D:\minikube-data\nexus so the Nexus PVC survives `minikube delete`.
-REM Other machines skip the mount (directory won't exist).
+REM On windows-minipc, mount C:\Users\Farhan\minikube-data\darmok-metrics so Darmok's
+REM per-scenario metrics.csv is readable by the Grafana pod (sheep-dog-main#252 step 3c).
+REM Branches are mutually exclusive — only one machine runs Nexus, only one runs Darmok.
+REM Other machines skip the mount (neither directory exists).
 if exist D:\minikube-data\nexus (
     echo Mounting D:\minikube-data\nexus into minikube at /mnt/nexus...
     minikube start --mount --mount-string="D:\minikube-data\nexus:/mnt/nexus"
+) else if exist C:\Users\Farhan\minikube-data\darmok-metrics (
+    echo Mounting C:\Users\Farhan\minikube-data\darmok-metrics into minikube at /mnt/darmok-metrics...
+    minikube start --mount --mount-string="C:\Users\Farhan\minikube-data\darmok-metrics:/mnt/darmok-metrics"
 ) else (
     minikube start
 )
