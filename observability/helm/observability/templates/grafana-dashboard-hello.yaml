@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-hello
+  labels:
+    grafana_dashboard: "1"
+data:
+  hello.json: |-
+    {
+      "title": "Hello from provisioning",
+      "uid": "hello-provisioning",
+      "schemaVersion": 39,
+      "version": 1,
+      "editable": false,
+      "panels": [
+        {
+          "id": 1,
+          "type": "text",
+          "title": "Provisioning verified",
+          "gridPos": {"h": 6, "w": 24, "x": 0, "y": 0},
+          "options": {
+            "mode": "markdown",
+            "content": "This dashboard was provisioned via ConfigMap + sidecar. If you see this, step 3b works.\n\nDelete-safe — step 3e replaces it with the real SPC dashboard."
+          }
+        }
+      ]
+    }

@@ -1,12 +1,26 @@
-# Step 3a: plain Grafana install, all defaults, no plugins/datasources/dashboards.
-# Everything else goes in downstream steps (3b provisioning loop, 3c CSV transport,
-# 3d Infinity datasource, 3e KensoBI SPC panel).
+# Step 3b: provisioning loop enabled — sidecar watches ConfigMaps with
+# `grafana_dashboard` / `grafana_datasource` labels and hot-loads them.
+# Still no plugins. Infinity + KensoBI land in 3d / 3e.
 
 grafana:
   service:
     type: ClusterIP
 
-  # Step 3a is "does Grafana come up". Persistence gets enabled in 3b when dashboards
-  # start mattering across restarts.
   persistence:
     enabled: false
+
+  # Sidecar provisioning — picks up any ConfigMap in the release namespace
+  # carrying the right label. Our chart contributes one of each as a smoke test;
+  # later steps add real datasources (3d) and dashboards (3e) via the same path.
+  sidecar:
+    datasources:
+      enabled: true
+      label: grafana_datasource
+      labelValue: "1"
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      folder: /tmp/dashboards
+      provider:
+        foldersFromFilesStructure: true
