@@ -1,0 +1,24 @@
+# Infinity datasource pointing at the CSV served by the in-pod nginx sidecar.
+# The CSV originates from Darmok on the host (C:\Users\Farhan\minikube-data\
+# darmok-metrics\metrics.csv), bridges into the minikube VM at /mnt/darmok-
+# metrics via the minikube --mount flag, lands in the Grafana pod as a
+# hostPath-backed PVC at /var/lib/grafana/darmok-metrics, and is served by
+# the nginx sidecar at http://localhost/metrics.csv (same-pod localhost only).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasource-darmok
+  labels:
+    grafana_datasource: "1"
+data:
+  darmok.yaml: |-
+    apiVersion: 1
+    datasources:
+      - name: Darmok
+        type: yesoreyeram-infinity-datasource
+        access: proxy
+        editable: false
+        jsonData:
+          allowedHosts:
+            - http://localhost:8888
+          datasource_mode: basic

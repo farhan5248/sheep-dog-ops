@@ -38,3 +38,29 @@ grafana:
     - name: darmok-metrics
       mountPath: /var/lib/grafana/darmok-metrics
       readOnly: true
+
+  # Step 3d: Infinity datasource plugin. Reads CSV/JSON/XML/etc. via URL;
+  # does NOT support file:// schemes, so the nginx sidecar (below) serves
+  # the hostPath-mounted CSV over http://localhost inside the pod.
+  plugins:
+    - yesoreyeram-infinity-datasource
+
+  # Sidecar that serves darmok-metrics/ over HTTP for Infinity to consume.
+  # Same pod, same PVC mount (read-only), localhost networking only. busybox
+  # httpd is used because it takes the port as a command arg (no conf file
+  # needed) and runs as any UID — matches the chart's runAsNonRoot=true.
+  # Port 8888 avoids conflict with the kiwigrid sidecar health endpoint on 8080.
+  extraContainers: |
+    - name: csv-server
+      image: busybox:1.37
+      command: ["httpd", "-f", "-p", "8888", "-h", "/data"]
+      ports:
+        - name: csv-http
+          containerPort: 8888
+      volumeMounts:
+        - name: darmok-metrics
+          mountPath: /data
+          readOnly: true
+      resources:
+        requests: { cpu: 10m, memory: 8Mi }
+        limits:   { cpu: 50m, memory: 32Mi }
