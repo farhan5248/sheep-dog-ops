@@ -1,0 +1,68 @@
+# Darmok SPC dashboard — XmR process-behaviour chart of green-phase cycle time
+# per scenario. Queries the Darmok Infinity datasource (which reads metrics.csv
+# served by the in-pod busybox sidecar on localhost:8888).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-darmok-spc
+  labels:
+    grafana_dashboard: "1"
+data:
+  darmok-spc.json: |-
+    {
+      "title": "Darmok RGR cycle time (SPC)",
+      "uid": "darmok-spc",
+      "schemaVersion": 39,
+      "version": 1,
+      "editable": true,
+      "tags": ["darmok", "spc"],
+      "timezone": "browser",
+      "panels": [
+        {
+          "id": 1,
+          "type": "kensobi-spc-panel",
+          "title": "Green phase duration per scenario — XmR",
+          "description": "Process-behaviour chart (X) of green-phase milliseconds per Darmok scenario. UCL/LCL computed from moving-range estimate of sigma.",
+          "gridPos": {"h": 12, "w": 24, "x": 0, "y": 0},
+          "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
+              "type": "csv",
+              "source": "url",
+              "format": "table",
+              "url": "http://localhost:8888/metrics.csv",
+              "url_options": {"method": "GET"},
+              "parser": "backend",
+              "columns": [
+                {"selector": "timestamp", "text": "timestamp", "type": "timestamp"},
+                {"selector": "commit", "text": "commit", "type": "string"},
+                {"selector": "scenario", "text": "scenario", "type": "string"},
+                {"selector": "phase_green_ms", "text": "phase_green_ms", "type": "number"}
+              ]
+            }
+          ],
+          "options": {
+            "chartType": "X (XmR)"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms"
+            },
+            "overrides": []
+          }
+        }
+      ],
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "type": "datasource",
+            "query": "yesoreyeram-infinity-datasource",
+            "current": {"text": "Darmok", "value": "Darmok"},
+            "hide": 0
+          }
+        ]
+      }
+    }

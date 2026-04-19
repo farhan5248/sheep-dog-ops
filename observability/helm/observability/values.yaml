@@ -44,6 +44,7 @@ grafana:
   # the hostPath-mounted CSV over http://localhost inside the pod.
   plugins:
     - yesoreyeram-infinity-datasource
+    - kensobi-spc-panel
 
   # Sidecar that serves darmok-metrics/ over HTTP for Infinity to consume.
   # Same pod, same PVC mount (read-only), localhost networking only. busybox
