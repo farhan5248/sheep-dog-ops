@@ -21,9 +21,9 @@ data:
         {
           "id": 1,
           "type": "kensobi-spc-panel",
-          "title": "Green phase duration per scenario — XmR",
-          "description": "Process-behaviour chart (X) of green-phase milliseconds per Darmok scenario. UCL/LCL computed from moving-range estimate of sigma.",
-          "gridPos": {"h": 12, "w": 24, "x": 0, "y": 0},
+          "title": "Green phase duration — X chart (individuals)",
+          "description": "Individuals chart: each point is one Darmok scenario's green-phase duration. Centerline = mean; UCL/LCL = mean ± 2.66·mR̄ from the moving ranges below.",
+          "gridPos": {"h": 9, "w": 24, "x": 0, "y": 0},
           "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
           "targets": [
             {
@@ -44,14 +44,52 @@ data:
             }
           ],
           "options": {
-            "chartType": "X (XmR)"
+            "chartType": "X-XmR",
+            "subgroupSize": 1,
+            "aggregationType": "Mean",
+            "controlLines": [
+              {"name": "Upper Control Limit", "reducerId": "ucl", "lineColor": "#e02f44", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0},
+              {"name": "Mean", "reducerId": "mean", "lineColor": "#73bf69", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0},
+              {"name": "Lower Control Limit", "reducerId": "lcl", "lineColor": "#e02f44", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0}
+            ]
           },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "ms"
-            },
-            "overrides": []
-          }
+          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []}
+        },
+        {
+          "id": 2,
+          "type": "kensobi-spc-panel",
+          "title": "Green phase duration — mR chart (moving ranges)",
+          "description": "Moving-range chart: |current − previous|. Centerline = mR̄; UCL = 3.267·mR̄ (no lower limit for mR). Out-of-control points on the mR chart indicate shifts in process variability.",
+          "gridPos": {"h": 7, "w": 24, "x": 0, "y": 9},
+          "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
+              "type": "csv",
+              "source": "url",
+              "format": "table",
+              "url": "http://localhost:8888/metrics.csv",
+              "url_options": {"method": "GET"},
+              "parser": "backend",
+              "columns": [
+                {"selector": "timestamp", "text": "timestamp", "type": "timestamp"},
+                {"selector": "commit", "text": "commit", "type": "string"},
+                {"selector": "scenario", "text": "scenario", "type": "string"},
+                {"selector": "phase_green_ms", "text": "phase_green_ms", "type": "number"}
+              ]
+            }
+          ],
+          "options": {
+            "chartType": "mR-XmR",
+            "subgroupSize": 1,
+            "aggregationType": "Mean",
+            "controlLines": [
+              {"name": "Upper Control Limit", "reducerId": "ucl", "lineColor": "#e02f44", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0},
+              {"name": "Mean Range", "reducerId": "mean", "lineColor": "#73bf69", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0}
+            ]
+          },
+          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []}
         }
       ],
       "templating": {
