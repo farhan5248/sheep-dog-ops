@@ -3,7 +3,7 @@
 # runs on the host and writes metrics.csv into that directory (set LOG_PATH to point at
 # it); Grafana in the cluster reads the same file via this PV.
 #
-# Mirrors sheep-dog-ops/nexus/pv.yaml; same rationale — survives `minikube delete` because
+# Mirrors sheep-dog-ops/infra/nexus/pv.yaml; same rationale — survives `minikube delete` because
 # the host directory is untouched when the VM is destroyed.
 apiVersion: v1
 kind: PersistentVolume

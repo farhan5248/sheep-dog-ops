@@ -25,7 +25,7 @@ if "%ENV%"=="" set ENV=dev
 if "%CHART_VERSION%"=="" set CHART_VERSION=latest
 
 set SCRIPTS_DIR=%~dp0
-set EKS_DIR=%~dp0..\..\eks\
+set EKS_DIR=%~dp0..\..\infra\eks\
 
 if not exist "%EKS_DIR%setup-cluster.bat" (
     echo eks/setup-cluster.bat not found under %EKS_DIR%

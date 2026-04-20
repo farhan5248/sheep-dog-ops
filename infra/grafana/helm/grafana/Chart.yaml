@@ -1,0 +1,11 @@
+apiVersion: v2
+name: grafana
+description: Grafana wrapper chart for the Darmok RGR pipeline — SPC dashboard + datasources. Loki and Prometheus Pushgateway land as sibling charts under infra/ per sheep-dog-main#277.
+type: application
+version: 0.1.0-SNAPSHOT
+appVersion: "0.1.0-SNAPSHOT"
+
+dependencies:
+  - name: grafana
+    version: "10.5.15"
+    repository: https://grafana.github.io/helm-charts

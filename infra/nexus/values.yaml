@@ -4,7 +4,7 @@
 #
 # The chart uses a StatefulSet with volumeClaimTemplates. It creates a PVC with
 # storageClassName=nexus-hostpath which binds to the static PV at
-# sheep-dog-ops/nexus/pv.yaml (hostPath /mnt/nexus -> D:\minikube-data\nexus).
+# sheep-dog-ops/infra/nexus/pv.yaml (hostPath /mnt/nexus -> D:\minikube-data\nexus).
 
 # Tune JVM for the 12 GB minikube host (chart default is already Xmx1024m + 2g direct).
 # Override via the dedicated chart key (NOT env, which would duplicate).

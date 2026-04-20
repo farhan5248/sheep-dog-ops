@@ -3,7 +3,7 @@ REM Configure Nexus for hosting helm charts, Maven artifacts, and Docker images.
 REM
 REM Prereqs:
 REM   - Nexus reachable at https://nexus.sheepdog.io (hosts file + minikube tunnel
-REM     + mkcert root CA trusted — see sheep-dog-ops/nexus/import-rootCA.bat)
+REM     + mkcert root CA trusted — see sheep-dog-ops/infra/nexus/import-rootCA.bat)
 REM   - Nexus admin password available in env var NEXUS_ADMIN_PW
 REM   - A deployment password available in env var NEXUS_DEPLOY_PW
 REM

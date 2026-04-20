@@ -12,7 +12,7 @@ ENV_NAME="${1:-dev}"
 CHART_VERSION="${2:-latest}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-EKS_DIR="$SCRIPT_DIR/../../eks"
+EKS_DIR="$SCRIPT_DIR/../../infra/eks"
 
 REGION="us-east-1"
 

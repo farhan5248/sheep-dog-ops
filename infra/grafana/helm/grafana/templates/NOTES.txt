@@ -1,14 +1,15 @@
-observability chart installed.
+grafana chart installed.
 
-Step 3a smoke test:
+Smoke test:
 
 1. kubectl -n {{ .Release.Namespace }} get pods
 
-2. kubectl -n {{ .Release.Namespace }} port-forward svc/{{ .Release.Name }}-grafana 3000:80
+2. Open http://grafana.sheepdog.io
+   (requires minikube tunnel + hosts-file entry: 127.0.0.1 grafana.sheepdog.io)
 
-3. Open http://localhost:3000 (user: admin, password: see command below)
+3. Log in as admin (password below):
 
-   kubectl -n {{ .Release.Namespace }} get secret {{ .Release.Name }}-grafana \
+   kubectl -n {{ .Release.Namespace }} get secret grafana \
      -o jsonpath='{.data.admin-password}' | base64 -d
 
 Upcoming steps (sheep-dog-main#252):
