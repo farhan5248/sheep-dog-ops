@@ -51,21 +51,11 @@ data:
               {"name": "Upper Control Limit", "reducerId": "ucl", "lineColor": "#e02f44", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0},
               {"name": "Mean", "reducerId": "mean", "lineColor": "#73bf69", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0},
               {"name": "Lower Control Limit", "reducerId": "lcl", "lineColor": "#e02f44", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0}
-            ]
+            ],
+            "tooltip": {"mode": "multi"},
+            "labels": {"show": true, "field": "scenario"}
           },
-          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []},
-          "transformations": [
-            {
-              "id": "filterByValue",
-              "options": {
-                "filters": [
-                  {"fieldName": "phase_green_ms", "config": {"id": "greater", "options": {"value": 0}}}
-                ],
-                "type": "include",
-                "match": "all"
-              }
-            }
-          ]
+          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []}
         },
         {
           "id": 2,
@@ -99,7 +89,48 @@ data:
             "controlLines": [
               {"name": "Upper Control Limit", "reducerId": "ucl", "lineColor": "#e02f44", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0},
               {"name": "Mean Range", "reducerId": "mean", "lineColor": "#73bf69", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0}
-            ]
+            ],
+            "tooltip": {"mode": "multi"},
+            "labels": {"show": true, "field": "scenario"}
+          },
+          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []}
+        },
+        {
+          "id": 3,
+          "type": "kensobi-spc-panel",
+          "title": "Refactor phase duration — X chart (individuals)",
+          "description": "Individuals chart for the refactor phase. Zero-refactor rows (tests-already-passing skip path) are filtered out — those scenarios don't exercise the refactor workflow and would drag the centerline toward zero.",
+          "gridPos": {"h": 9, "w": 24, "x": 0, "y": 16},
+          "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
+              "type": "csv",
+              "source": "url",
+              "format": "table",
+              "url": "http://localhost:8888/metrics.csv",
+              "url_options": {"method": "GET"},
+              "parser": "backend",
+              "columns": [
+                {"selector": "timestamp", "text": "timestamp", "type": "timestamp"},
+                {"selector": "commit", "text": "commit", "type": "string"},
+                {"selector": "scenario", "text": "scenario", "type": "string"},
+                {"selector": "phase_refactor_ms", "text": "phase_refactor_ms", "type": "number"}
+              ]
+            }
+          ],
+          "options": {
+            "chartType": "X-XmR",
+            "subgroupSize": 1,
+            "aggregationType": "Mean",
+            "controlLines": [
+              {"name": "Upper Control Limit", "reducerId": "ucl", "lineColor": "#e02f44", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0},
+              {"name": "Mean", "reducerId": "mean", "lineColor": "#73bf69", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0},
+              {"name": "Lower Control Limit", "reducerId": "lcl", "lineColor": "#e02f44", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0}
+            ],
+            "tooltip": {"mode": "multi"},
+            "labels": {"show": true, "field": "scenario"}
           },
           "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []},
           "transformations": [
@@ -107,7 +138,57 @@ data:
               "id": "filterByValue",
               "options": {
                 "filters": [
-                  {"fieldName": "phase_green_ms", "config": {"id": "greater", "options": {"value": 0}}}
+                  {"fieldName": "phase_refactor_ms", "config": {"id": "greater", "options": {"value": 0}}}
+                ],
+                "type": "include",
+                "match": "all"
+              }
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "kensobi-spc-panel",
+          "title": "Refactor phase duration — mR chart (moving ranges)",
+          "description": "Moving-range chart for the refactor phase. Same zero-filter as the X chart above — only scenarios that actually ran refactor contribute to the process variability estimate.",
+          "gridPos": {"h": 7, "w": 24, "x": 0, "y": 25},
+          "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
+              "type": "csv",
+              "source": "url",
+              "format": "table",
+              "url": "http://localhost:8888/metrics.csv",
+              "url_options": {"method": "GET"},
+              "parser": "backend",
+              "columns": [
+                {"selector": "timestamp", "text": "timestamp", "type": "timestamp"},
+                {"selector": "commit", "text": "commit", "type": "string"},
+                {"selector": "scenario", "text": "scenario", "type": "string"},
+                {"selector": "phase_refactor_ms", "text": "phase_refactor_ms", "type": "number"}
+              ]
+            }
+          ],
+          "options": {
+            "chartType": "mR-XmR",
+            "subgroupSize": 1,
+            "aggregationType": "Mean",
+            "controlLines": [
+              {"name": "Upper Control Limit", "reducerId": "ucl", "lineColor": "#e02f44", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0},
+              {"name": "Mean Range", "reducerId": "mean", "lineColor": "#73bf69", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0}
+            ],
+            "tooltip": {"mode": "multi"},
+            "labels": {"show": true, "field": "scenario"}
+          },
+          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []},
+          "transformations": [
+            {
+              "id": "filterByValue",
+              "options": {
+                "filters": [
+                  {"fieldName": "phase_refactor_ms", "config": {"id": "greater", "options": {"value": 0}}}
                 ],
                 "type": "include",
                 "match": "all"
