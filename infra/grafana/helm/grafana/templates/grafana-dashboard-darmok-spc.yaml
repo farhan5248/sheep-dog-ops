@@ -53,7 +53,19 @@ data:
               {"name": "Lower Control Limit", "reducerId": "lcl", "lineColor": "#e02f44", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0}
             ]
           },
-          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []}
+          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []},
+          "transformations": [
+            {
+              "id": "filterByValue",
+              "options": {
+                "filters": [
+                  {"fieldName": "phase_green_ms", "config": {"id": "greater", "options": {"value": 0}}}
+                ],
+                "type": "include",
+                "match": "all"
+              }
+            }
+          ]
         },
         {
           "id": 2,
@@ -89,7 +101,19 @@ data:
               {"name": "Mean Range", "reducerId": "mean", "lineColor": "#73bf69", "lineWidth": 2, "positionInput": "Static", "position": 0, "fillDirection": 0, "fillOpacity": 10, "field": "", "seriesIndex": 0}
             ]
           },
-          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []}
+          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []},
+          "transformations": [
+            {
+              "id": "filterByValue",
+              "options": {
+                "filters": [
+                  {"fieldName": "phase_green_ms", "config": {"id": "greater", "options": {"value": 0}}}
+                ],
+                "type": "include",
+                "match": "all"
+              }
+            }
+          ]
         }
       ],
       "templating": {

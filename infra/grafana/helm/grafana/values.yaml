@@ -36,7 +36,7 @@ grafana:
 
   # Step 3c: mount the Darmok metrics hostPath PVC read-only so Infinity (3d) can read
   # /var/lib/grafana/darmok-metrics/metrics.csv. Host-side dir is
-  # C:\Users\Farhan\minikube-data\darmok-metrics on windows-minipc, bridged via
+  # C:\minikube-data\darmok-metrics on windows-minipc, bridged via
   # minikube start --mount-string (see sheep-dog-ops/infra/minikube/setup-cluster-local.bat).
   # Chart uses its own `existingClaim` shorthand, not the standard
   # persistentVolumeClaim.claimName shape.
