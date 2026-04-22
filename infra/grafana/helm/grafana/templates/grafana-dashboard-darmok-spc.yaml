@@ -37,6 +37,7 @@ data:
               "parser": "backend",
               "columns": [
                 {"selector": "timestamp", "text": "timestamp", "type": "timestamp"},
+                {"selector": "git_branch", "text": "git_branch", "type": "string"},
                 {"selector": "commit", "text": "commit", "type": "string"},
                 {"selector": "scenario", "text": "scenario", "type": "string"},
                 {"selector": "phase_green_ms", "text": "phase_green_ms", "type": "number"}
@@ -55,7 +56,10 @@ data:
             "tooltip": {"mode": "multi"},
             "labels": {"show": true, "field": "scenario"}
           },
-          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []}
+          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []},
+          "transformations": [
+            {"id": "partitionByValues", "options": {"fields": ["git_branch"], "keepFields": true, "naming": {"asLabels": false}}}
+          ]
         },
         {
           "id": 2,
@@ -76,6 +80,7 @@ data:
               "parser": "backend",
               "columns": [
                 {"selector": "timestamp", "text": "timestamp", "type": "timestamp"},
+                {"selector": "git_branch", "text": "git_branch", "type": "string"},
                 {"selector": "commit", "text": "commit", "type": "string"},
                 {"selector": "scenario", "text": "scenario", "type": "string"},
                 {"selector": "phase_green_ms", "text": "phase_green_ms", "type": "number"}
@@ -93,7 +98,10 @@ data:
             "tooltip": {"mode": "multi"},
             "labels": {"show": true, "field": "scenario"}
           },
-          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []}
+          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []},
+          "transformations": [
+            {"id": "partitionByValues", "options": {"fields": ["git_branch"], "keepFields": true, "naming": {"asLabels": false}}}
+          ]
         },
         {
           "id": 3,
@@ -114,6 +122,7 @@ data:
               "parser": "backend",
               "columns": [
                 {"selector": "timestamp", "text": "timestamp", "type": "timestamp"},
+                {"selector": "git_branch", "text": "git_branch", "type": "string"},
                 {"selector": "commit", "text": "commit", "type": "string"},
                 {"selector": "scenario", "text": "scenario", "type": "string"},
                 {"selector": "phase_refactor_ms", "text": "phase_refactor_ms", "type": "number"}
@@ -143,7 +152,8 @@ data:
                 "type": "include",
                 "match": "all"
               }
-            }
+            },
+            {"id": "partitionByValues", "options": {"fields": ["git_branch"], "keepFields": true, "naming": {"asLabels": false}}}
           ]
         },
         {
@@ -165,6 +175,7 @@ data:
               "parser": "backend",
               "columns": [
                 {"selector": "timestamp", "text": "timestamp", "type": "timestamp"},
+                {"selector": "git_branch", "text": "git_branch", "type": "string"},
                 {"selector": "commit", "text": "commit", "type": "string"},
                 {"selector": "scenario", "text": "scenario", "type": "string"},
                 {"selector": "phase_refactor_ms", "text": "phase_refactor_ms", "type": "number"}
@@ -193,7 +204,8 @@ data:
                 "type": "include",
                 "match": "all"
               }
-            }
+            },
+            {"id": "partitionByValues", "options": {"fields": ["git_branch"], "keepFields": true, "naming": {"asLabels": false}}}
           ]
         }
       ],
