@@ -21,9 +21,11 @@ data:
         {
           "id": 1,
           "type": "kensobi-spc-panel",
-          "title": "Green phase duration — X chart (individuals)",
-          "description": "Individuals chart: each point is one Darmok scenario's green-phase duration. Centerline = mean; UCL/LCL = mean ± 2.66·mR̄ from the moving ranges below.",
+          "title": "Green phase duration — X chart (${git_branch})",
+          "description": "Individuals chart: each point is one Darmok scenario's green-phase duration. Centerline = mean; UCL/LCL = mean ± 2.66·mR̄ from the moving ranges below. One panel instance per selected git_branch.",
           "gridPos": {"h": 9, "w": 24, "x": 0, "y": 0},
+          "repeat": "git_branch",
+          "repeatDirection": "v",
           "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
           "targets": [
             {
@@ -58,15 +60,26 @@ data:
           },
           "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []},
           "transformations": [
-            {"id": "partitionByValues", "options": {"fields": ["git_branch"], "keepFields": true, "naming": {"asLabels": false}}}
+            {
+              "id": "filterByValue",
+              "options": {
+                "filters": [
+                  {"fieldName": "git_branch", "config": {"id": "equal", "options": {"value": "${git_branch}"}}}
+                ],
+                "type": "include",
+                "match": "all"
+              }
+            }
           ]
         },
         {
           "id": 2,
           "type": "kensobi-spc-panel",
-          "title": "Green phase duration — mR chart (moving ranges)",
-          "description": "Moving-range chart: |current − previous|. Centerline = mR̄; UCL = 3.267·mR̄ (no lower limit for mR). Out-of-control points on the mR chart indicate shifts in process variability.",
+          "title": "Green phase duration — mR chart (${git_branch})",
+          "description": "Moving-range chart: |current − previous|. Centerline = mR̄; UCL = 3.267·mR̄ (no lower limit for mR). Out-of-control points on the mR chart indicate shifts in process variability. One panel instance per selected git_branch.",
           "gridPos": {"h": 7, "w": 24, "x": 0, "y": 9},
+          "repeat": "git_branch",
+          "repeatDirection": "v",
           "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
           "targets": [
             {
@@ -100,15 +113,26 @@ data:
           },
           "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []},
           "transformations": [
-            {"id": "partitionByValues", "options": {"fields": ["git_branch"], "keepFields": true, "naming": {"asLabels": false}}}
+            {
+              "id": "filterByValue",
+              "options": {
+                "filters": [
+                  {"fieldName": "git_branch", "config": {"id": "equal", "options": {"value": "${git_branch}"}}}
+                ],
+                "type": "include",
+                "match": "all"
+              }
+            }
           ]
         },
         {
           "id": 3,
           "type": "kensobi-spc-panel",
-          "title": "Refactor phase duration — X chart (individuals)",
-          "description": "Individuals chart for the refactor phase. Zero-refactor rows (tests-already-passing skip path) are filtered out — those scenarios don't exercise the refactor workflow and would drag the centerline toward zero.",
+          "title": "Refactor phase duration — X chart (${git_branch})",
+          "description": "Individuals chart for the refactor phase. Zero-refactor rows (tests-already-passing skip path) are filtered out — those scenarios don't exercise the refactor workflow and would drag the centerline toward zero. One panel instance per selected git_branch.",
           "gridPos": {"h": 9, "w": 24, "x": 0, "y": 16},
+          "repeat": "git_branch",
+          "repeatDirection": "v",
           "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
           "targets": [
             {
@@ -147,21 +171,23 @@ data:
               "id": "filterByValue",
               "options": {
                 "filters": [
-                  {"fieldName": "phase_refactor_ms", "config": {"id": "greater", "options": {"value": 0}}}
+                  {"fieldName": "phase_refactor_ms", "config": {"id": "greater", "options": {"value": 0}}},
+                  {"fieldName": "git_branch", "config": {"id": "equal", "options": {"value": "${git_branch}"}}}
                 ],
                 "type": "include",
                 "match": "all"
               }
-            },
-            {"id": "partitionByValues", "options": {"fields": ["git_branch"], "keepFields": true, "naming": {"asLabels": false}}}
+            }
           ]
         },
         {
           "id": 4,
           "type": "kensobi-spc-panel",
-          "title": "Refactor phase duration — mR chart (moving ranges)",
-          "description": "Moving-range chart for the refactor phase. Same zero-filter as the X chart above — only scenarios that actually ran refactor contribute to the process variability estimate.",
+          "title": "Refactor phase duration — mR chart (${git_branch})",
+          "description": "Moving-range chart for the refactor phase. Same zero-filter as the X chart above — only scenarios that actually ran refactor contribute to the process variability estimate. One panel instance per selected git_branch.",
           "gridPos": {"h": 7, "w": 24, "x": 0, "y": 25},
+          "repeat": "git_branch",
+          "repeatDirection": "v",
           "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
           "targets": [
             {
@@ -199,13 +225,13 @@ data:
               "id": "filterByValue",
               "options": {
                 "filters": [
-                  {"fieldName": "phase_refactor_ms", "config": {"id": "greater", "options": {"value": 0}}}
+                  {"fieldName": "phase_refactor_ms", "config": {"id": "greater", "options": {"value": 0}}},
+                  {"fieldName": "git_branch", "config": {"id": "equal", "options": {"value": "${git_branch}"}}}
                 ],
                 "type": "include",
                 "match": "all"
               }
-            },
-            {"id": "partitionByValues", "options": {"fields": ["git_branch"], "keepFields": true, "naming": {"asLabels": false}}}
+            }
           ]
         }
       ],
@@ -216,6 +242,31 @@ data:
             "type": "datasource",
             "query": "yesoreyeram-infinity-datasource",
             "current": {"text": "Darmok", "value": "Darmok"},
+            "hide": 0
+          },
+          {
+            "name": "git_branch",
+            "label": "Branch",
+            "type": "query",
+            "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
+            "query": {
+              "queryType": "infinity",
+              "infinityQuery": {
+                "type": "csv",
+                "source": "url",
+                "format": "table",
+                "url": "http://localhost:8888/metrics.csv",
+                "url_options": {"method": "GET"},
+                "parser": "backend",
+                "columns": [
+                  {"selector": "git_branch", "text": "git_branch", "type": "string"}
+                ]
+              }
+            },
+            "multi": true,
+            "includeAll": true,
+            "refresh": 2,
+            "sort": 1,
             "hide": 0
           }
         ]
