@@ -170,7 +170,7 @@ public class ReleaseMojo extends AbstractMojo {
 					"org.codehaus.mojo:versions-maven-plugin:update-properties",
 					"-DallowSnapshots=true");
 			runOrFail(git, workingDir, "clean", "-fdx");
-			commitDependencyChangesIfAny(git, workingDir);
+			commitDependencyChangesIfAny(git, workingDir, pomFile, versionsBefore);
 
 			// Publish the SNAPSHOT so downstream projects can resolve the latest
 			runOrFail(mvn, workingDir, "clean", "deploy", "-DskipTests");
@@ -284,15 +284,23 @@ public class ReleaseMojo extends AbstractMojo {
 		runOrFail(git, workingDir, "tag", tag);
 	}
 
-	private void commitDependencyChangesIfAny(GitRunner git, String workingDir) throws Exception {
-		int exitCode = git.run(workingDir, "diff", "--quiet", "HEAD", "--", ".", ":(exclude)*.bat");
-		if (exitCode != 0) {
-			getLog().info("Dependency versions changed, committing");
+	// Compares post-release SNAPSHOT-pinned versions against the snapshot
+	// captured at the start of the run. Commits only on a real upgrade, so a
+	// SNAPSHOT->release->SNAPSHOT round-trip with no new upstream release does
+	// not produce a phantom commit. Without this gate, every run writes
+	// "[Release] Upgrading dependency versions" which counts as a source
+	// change for the next run and self-perpetuates a release loop. See #338.
+	private void commitDependencyChangesIfAny(GitRunner git, String workingDir,
+			File pomFile, Map<String, String> versionsBefore) throws Exception {
+		Map<String, String> versionsAfter = extractVersionProperties(pomFile);
+		if (hasUpgradedDependencies(versionsBefore, versionsAfter)) {
+			getLog().info("Dependency versions upgraded, committing");
 			git.run(workingDir, "add", ".");
 			runOrFail(git, workingDir, "commit", "-m", "[Release] Upgrading dependency versions");
 			runOrFail(git, workingDir, "push");
 		} else {
-			getLog().info("No dependency changes to commit");
+			getLog().info("No dependency upgrades since start of run, reverting pom rewrite");
+			runOrFail(git, workingDir, "reset", "--hard", "HEAD");
 		}
 	}
 
