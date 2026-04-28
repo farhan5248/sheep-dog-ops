@@ -45,6 +45,12 @@ jobs:
       packages: write
     steps:
     - uses: actions/checkout@v4
+      with:
+        # Full history so ReleaseMojo's hasSourceChanges can find the most
+        # recent [Release] commit; with the default depth-1 shallow clone
+        # the grep returns empty and every run treats the project as new
+        # and force-releases. See #340.
+        fetch-depth: 0
     - name: Set up JDK 21
       run: echo "JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64" >> $GITHUB_ENV
     - name: Helm registry login (Nexus OCI)
