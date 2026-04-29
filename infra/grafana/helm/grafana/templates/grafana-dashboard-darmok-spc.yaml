@@ -13,7 +13,7 @@ data:
       "title": "Darmok RGR cycle time (SPC)",
       "uid": "darmok-spc",
       "schemaVersion": 39,
-      "version": 1,
+      "version": 4,
       "editable": true,
       "tags": ["darmok", "spc"],
       "timezone": "browser",
@@ -22,7 +22,7 @@ data:
           "id": 1,
           "type": "kensobi-spc-panel",
           "title": "Green phase duration — X chart (${git_branch})",
-          "description": "Individuals chart: each point is one Darmok scenario's green-phase duration. Centerline = mean; UCL/LCL = mean ± 2.66·mR̄ from the moving ranges below. One panel instance per selected git_branch.",
+          "description": "Individuals chart: each point is one Darmok scenario's green-phase duration. Centerline = mean; UCL/LCL = mean ± 2.66·mR̄ from the moving ranges below. Zero-green rows (green-phase skipped) are filtered out — those scenarios don't exercise the green workflow and would drag the centerline toward zero. One panel instance per selected git_branch.",
           "gridPos": {"h": 9, "w": 24, "x": 0, "y": 0},
           "repeat": "git_branch",
           "repeatDirection": "v",
@@ -64,6 +64,7 @@ data:
               "id": "filterByValue",
               "options": {
                 "filters": [
+                  {"fieldName": "phase_green_ms", "config": {"id": "greater", "options": {"value": 0}}},
                   {"fieldName": "git_branch", "config": {"id": "equal", "options": {"value": "${git_branch}"}}}
                 ],
                 "type": "include",
@@ -76,7 +77,7 @@ data:
           "id": 2,
           "type": "kensobi-spc-panel",
           "title": "Green phase duration — mR chart (${git_branch})",
-          "description": "Moving-range chart: |current − previous|. Centerline = mR̄; UCL = 3.267·mR̄ (no lower limit for mR). Out-of-control points on the mR chart indicate shifts in process variability. One panel instance per selected git_branch.",
+          "description": "Moving-range chart: |current − previous|. Centerline = mR̄; UCL = 3.267·mR̄ (no lower limit for mR). Same zero-filter as the X chart above — only scenarios that actually ran green contribute to the process variability estimate. One panel instance per selected git_branch.",
           "gridPos": {"h": 7, "w": 24, "x": 0, "y": 9},
           "repeat": "git_branch",
           "repeatDirection": "v",
@@ -117,6 +118,7 @@ data:
               "id": "filterByValue",
               "options": {
                 "filters": [
+                  {"fieldName": "phase_green_ms", "config": {"id": "greater", "options": {"value": 0}}},
                   {"fieldName": "git_branch", "config": {"id": "equal", "options": {"value": "${git_branch}"}}}
                 ],
                 "type": "include",
@@ -226,6 +228,80 @@ data:
               "options": {
                 "filters": [
                   {"fieldName": "phase_refactor_ms", "config": {"id": "greater", "options": {"value": 0}}},
+                  {"fieldName": "git_branch", "config": {"id": "equal", "options": {"value": "${git_branch}"}}}
+                ],
+                "type": "include",
+                "match": "all"
+              }
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "Green vs Refactor phase duration (${git_branch})",
+          "description": "Side-by-side time series of green-phase and refactor-phase durations per scenario. Use to compare which phase dominates total cycle time and how the two trend together. Zero durations are kept — phase-skipped scenarios show as a dip to zero on the affected line. One panel instance per selected git_branch.",
+          "gridPos": {"h": 9, "w": 24, "x": 0, "y": 32},
+          "repeat": "git_branch",
+          "repeatDirection": "v",
+          "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "${datasource}"},
+              "type": "csv",
+              "source": "url",
+              "format": "table",
+              "url": "http://localhost:8888/metrics.csv",
+              "url_options": {"method": "GET"},
+              "parser": "backend",
+              "columns": [
+                {"selector": "timestamp", "text": "timestamp", "type": "timestamp"},
+                {"selector": "git_branch", "text": "git_branch", "type": "string"},
+                {"selector": "commit", "text": "commit", "type": "string"},
+                {"selector": "scenario", "text": "scenario", "type": "string"},
+                {"selector": "phase_green_ms", "text": "phase_green_ms", "type": "number"},
+                {"selector": "phase_refactor_ms", "text": "phase_refactor_ms", "type": "number"}
+              ]
+            }
+          ],
+          "options": {
+            "tooltip": {"mode": "multi", "sort": "none"},
+            "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "showPoints": "auto",
+                "spanNulls": false
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {"id": "byName", "options": "phase_green_ms"},
+                "properties": [
+                  {"id": "displayName", "value": "Green"},
+                  {"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}
+                ]
+              },
+              {
+                "matcher": {"id": "byName", "options": "phase_refactor_ms"},
+                "properties": [
+                  {"id": "displayName", "value": "Refactor"},
+                  {"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}}
+                ]
+              }
+            ]
+          },
+          "transformations": [
+            {
+              "id": "filterByValue",
+              "options": {
+                "filters": [
                   {"fieldName": "git_branch", "config": {"id": "equal", "options": {"value": "${git_branch}"}}}
                 ],
                 "type": "include",
