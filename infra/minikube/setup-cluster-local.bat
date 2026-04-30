@@ -7,12 +7,12 @@ REM Branches are mutually exclusive — only one machine runs Nexus, only one ru
 REM Other machines skip the mount (neither directory exists).
 if exist D:\minikube-data\nexus (
     echo Mounting D:\minikube-data\nexus into minikube at /mnt/nexus...
-    minikube start --cpus=4 --mount --mount-string="D:\minikube-data\nexus:/mnt/nexus"
+    minikube start --cpus=4 --memory=16384 --mount --mount-string="D:\minikube-data\nexus:/mnt/nexus"
 ) else if exist C:\minikube-data\darmok-metrics (
     echo Mounting C:\minikube-data\darmok-metrics into minikube at /mnt/darmok-metrics...
-    minikube start --cpus=4 --mount --mount-string="C:\minikube-data\darmok-metrics:/mnt/darmok-metrics"
+    minikube start --cpus=4 --memory=16384 --mount --mount-string="C:\minikube-data\darmok-metrics:/mnt/darmok-metrics"
 ) else (
-    minikube start --cpus=4
+    minikube start --cpus=4 --memory=16384
 )
 if errorlevel 1 (
     echo ERROR: minikube start failed.
