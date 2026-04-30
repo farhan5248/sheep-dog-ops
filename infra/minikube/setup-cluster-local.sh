@@ -2,7 +2,7 @@
 set -e
 
 echo "Starting minikube..."
-minikube start
+minikube start --cpus=4
 
 # Import the mkcert root CA into the minikube VM so kubelet/docker can pull
 # images from Nexus over HTTPS. `minikube delete` destroys the VM's trust
