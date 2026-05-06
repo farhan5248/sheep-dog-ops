@@ -90,5 +90,7 @@ fi
 echo
 
 echo "=== Starting minikube (base script) ==="
+# Forward LAN_IP as the apiserver-ips SAN so remote kubectl from other LAN
+# machines doesn't hit a TLS SAN mismatch on https://$LAN_IP:8443.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec "$SCRIPT_DIR/setup-cluster-local.sh" "$MEMORY_MB" "$CPUS" "$DISK_SIZE"
+exec "$SCRIPT_DIR/setup-cluster-local.sh" "$MEMORY_MB" "$CPUS" "$DISK_SIZE" "$LAN_IP"
