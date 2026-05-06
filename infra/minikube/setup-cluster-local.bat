@@ -1,5 +1,13 @@
 @echo off
-echo Starting minikube...
+if "%~3"=="" (
+    echo Usage: setup-cluster-local.bat ^<memory-mb^> ^<cpus^> ^<disk-size^>
+    echo Example: setup-cluster-local.bat 16384 6 30g
+    exit /b 1
+)
+set MEMORY_MB=%~1
+set CPUS=%~2
+set DISK_SIZE=%~3
+echo Starting minikube with --memory=%MEMORY_MB% --cpus=%CPUS% --disk-size=%DISK_SIZE%...
 REM On windows-desktop, mount D:\minikube-data\nexus so the Nexus PVC survives `minikube delete`.
 REM On windows-minipc, mount C:\minikube-data\darmok-metrics so Darmok's
 REM per-scenario metrics.csv is readable by the Grafana pod (sheep-dog-main#252 / #281).
@@ -7,12 +15,12 @@ REM Branches are mutually exclusive — only one machine runs Nexus, only one ru
 REM Other machines skip the mount (neither directory exists).
 if exist D:\minikube-data\nexus (
     echo Mounting D:\minikube-data\nexus into minikube at /mnt/nexus...
-    minikube start --cpus=4 --memory=16384 --mount --mount-string="D:\minikube-data\nexus:/mnt/nexus"
+    minikube start --cpus=%CPUS% --memory=%MEMORY_MB% --disk-size=%DISK_SIZE% --mount --mount-string="D:\minikube-data\nexus:/mnt/nexus"
 ) else if exist C:\minikube-data\darmok-metrics (
     echo Mounting C:\minikube-data\darmok-metrics into minikube at /mnt/darmok-metrics...
-    minikube start --cpus=4 --memory=16384 --mount --mount-string="C:\minikube-data\darmok-metrics:/mnt/darmok-metrics"
+    minikube start --cpus=%CPUS% --memory=%MEMORY_MB% --disk-size=%DISK_SIZE% --mount --mount-string="C:\minikube-data\darmok-metrics:/mnt/darmok-metrics"
 ) else (
-    minikube start --cpus=4 --memory=16384
+    minikube start --cpus=%CPUS% --memory=%MEMORY_MB% --disk-size=%DISK_SIZE%
 )
 if errorlevel 1 (
     echo ERROR: minikube start failed.

@@ -21,7 +21,17 @@ REM   - Must be run as Administrator (portproxy + firewall rules are privileged)
 REM   - Only run on machines that intentionally serve the LAN
 REM
 REM Usage:
-REM   Run as admin: setup-cluster.bat
+REM   Run as admin: setup-cluster.bat <memory-mb> <cpus> <disk-size>
+REM   Example:      setup-cluster.bat 16384 6 30g
+
+if "%~3"=="" (
+    echo Usage: setup-cluster.bat ^<memory-mb^> ^<cpus^> ^<disk-size^>
+    echo Example: setup-cluster.bat 16384 6 30g
+    exit /b 1
+)
+set MEMORY_MB=%~1
+set CPUS=%~2
+set DISK_SIZE=%~3
 
 REM Check for admin. fltmc.exe requires admin; it's a reliable probe.
 fltmc >nul 2>&1
@@ -91,4 +101,4 @@ echo     netsh advfirewall firewall show rule name="Nexus ingress :443"
 echo.
 
 echo === Starting minikube ^(base script^) ===
-call "%~dp0setup-cluster-local.bat"
+call "%~dp0setup-cluster-local.bat" %MEMORY_MB% %CPUS% %DISK_SIZE%

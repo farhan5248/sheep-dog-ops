@@ -1,8 +1,26 @@
 #!/usr/bin/bash
 set -e
 
-echo "Starting minikube..."
-minikube start --cpus=4
+if [[ -z "${3:-}" ]]; then
+    echo "Usage: $(basename "$0") <memory-mb> <cpus> <disk-size>"
+    echo "Example: $(basename "$0") 10240 6 30g"
+    exit 1
+fi
+MEMORY_MB="$1"
+CPUS="$2"
+DISK_SIZE="$3"
+
+echo "Starting minikube with --memory=$MEMORY_MB --cpus=$CPUS --disk-size=$DISK_SIZE..."
+# On the Darmok host, mount $HOME/minikube-data/darmok-metrics so Darmok's
+# per-scenario metrics.csv is readable by the Grafana pod (sheep-dog-main#252 / #281).
+# Other machines skip the mount (directory doesn't exist).
+DARMOK_METRICS_DIR="$HOME/minikube-data/darmok-metrics"
+if [[ -d "$DARMOK_METRICS_DIR" ]]; then
+    echo "Mounting $DARMOK_METRICS_DIR into minikube at /mnt/darmok-metrics..."
+    minikube start --cpus="$CPUS" --memory="$MEMORY_MB" --disk-size="$DISK_SIZE" --mount --mount-string="$DARMOK_METRICS_DIR:/mnt/darmok-metrics"
+else
+    minikube start --cpus="$CPUS" --memory="$MEMORY_MB" --disk-size="$DISK_SIZE"
+fi
 
 # Import the mkcert root CA into the minikube VM so kubelet/docker can pull
 # images from Nexus over HTTPS. `minikube delete` destroys the VM's trust
