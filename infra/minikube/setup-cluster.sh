@@ -74,12 +74,42 @@ sudo iptables -t nat -A PREROUTING -d "$LAN_IP" -p tcp --dport 80 -j DNAT --to-d
 echo "Adding DNAT: $LAN_IP:443 -> 127.0.0.1:443..."
 sudo iptables -t nat -A PREROUTING -d "$LAN_IP" -p tcp --dport 443 -j DNAT --to-destination 127.0.0.1:443
 
-# ufw: if active, allow inbound 80/443. The DNAT rule above only handles
-# rewriting; without an INPUT allow, ufw drops the SYN before NAT applies.
+# Apiserver (8443) needed for remote `kubectl` from another LAN machine.
+# The minikube apiserver listens on the minikube container IP (192.168.49.2
+# with the default docker-driver subnet), not 127.0.0.1, so this DNAT goes
+# to a different destination than the 80/443 ones above. MASQUERADE on the
+# forwarded traffic so the apiserver sees the host's docker-bridge IP as
+# the client and the reply path goes back through the host instead of
+# leaking out direct to the original LAN client (which would see a reply
+# from 192.168.49.2 when it sent to $LAN_IP:8443 and drop it).
+#
+# Pairs with --apiserver-ips=$LAN_IP (passed to setup-cluster-local.sh
+# below) so the apiserver TLS cert SAN covers the LAN address — the remote
+# client connects to https://$LAN_IP:8443 with no SAN mismatch.
+MINIKUBE_IP="192.168.49.2"
+
+echo "Removing any existing DNAT rule on port 8443..."
+while sudo iptables -t nat -C PREROUTING -d "$LAN_IP" -p tcp --dport 8443 -j DNAT --to-destination "$MINIKUBE_IP:8443" 2>/dev/null; do
+    sudo iptables -t nat -D PREROUTING -d "$LAN_IP" -p tcp --dport 8443 -j DNAT --to-destination "$MINIKUBE_IP:8443"
+done
+echo "Adding DNAT: $LAN_IP:8443 -> $MINIKUBE_IP:8443..."
+sudo iptables -t nat -A PREROUTING -d "$LAN_IP" -p tcp --dport 8443 -j DNAT --to-destination "$MINIKUBE_IP:8443"
+
+echo "Removing any existing POSTROUTING MASQUERADE for $MINIKUBE_IP:8443..."
+while sudo iptables -t nat -C POSTROUTING -p tcp -d "$MINIKUBE_IP" --dport 8443 -j MASQUERADE 2>/dev/null; do
+    sudo iptables -t nat -D POSTROUTING -p tcp -d "$MINIKUBE_IP" --dport 8443 -j MASQUERADE
+done
+echo "Adding POSTROUTING MASQUERADE: -> $MINIKUBE_IP:8443..."
+sudo iptables -t nat -A POSTROUTING -p tcp -d "$MINIKUBE_IP" --dport 8443 -j MASQUERADE
+
+# ufw: if active, allow inbound 80/443/8443. The DNAT rules above only
+# handle rewriting; without an INPUT allow, ufw drops the SYN before NAT
+# applies.
 if command -v ufw >/dev/null 2>&1 && sudo ufw status | grep -q "Status: active"; then
-    echo "Allowing inbound TCP/80 and TCP/443 in ufw..."
+    echo "Allowing inbound TCP/80, TCP/443, and TCP/8443 in ufw..."
     sudo ufw allow 80/tcp
     sudo ufw allow 443/tcp
+    sudo ufw allow 8443/tcp
 fi
 
 echo "LAN exposure configured. Verify later with:"
