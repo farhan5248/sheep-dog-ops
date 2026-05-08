@@ -13,3 +13,14 @@ nohup bash sheep-dog-ops/infra/minikube/setup-cluster-ubuntu-sandbox.sh > /tmp/s
 disown
 tail -f /tmp/setup-cluster.log
 ```
+
+```
+kubectl --context=ubuntu-sandbox scale deployment,statefulset --all -n qa --replicas=0
+kubectl --context=ubuntu-sandbox scale deployment,statefulset --all -n qa --replicas=1
+kubectl --context=ubuntu-sandbox get deploy,sts -n qa
+```
+
+```
+echo "$SUDO_PASSWORD" | sudo -SE nohup minikube tunnel > /tmp/tunnel.log 2>&1 &
+disown
+```
