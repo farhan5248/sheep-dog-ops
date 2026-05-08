@@ -11,11 +11,21 @@
 #   exposure before the call.
 #
 # Why this is needed at all:
-#   `minikube tunnel` only binds to 127.0.0.1, so the minikube ingress is
-#   not reachable across the LAN by default. We DNAT <LAN-IP>:80 and :443
-#   to 127.0.0.1 on this host. Port 443 is needed now that nexus serves
-#   HTTPS (#217). route_localnet=1 is required to allow the kernel to
-#   forward externally-arriving traffic to a 127.0.0.0/8 destination.
+#   On Linux + docker driver, `minikube tunnel` doesn't bind any host
+#   port — it only adds a route so the LoadBalancer EXTERNAL-IP is
+#   reachable via the docker bridge (gateway 192.168.49.1, cluster node
+#   192.168.49.2). The minikube ingress controller's 80/443 land on the
+#   cluster node IP. We DNAT <LAN-IP>:80/443 to 192.168.49.2 (paralleling
+#   the 8443 apiserver DNAT below) and MASQUERADE the forwarded traffic
+#   so replies route back through the host instead of leaking direct to
+#   the LAN client. Port 443 is needed now that nexus serves HTTPS
+#   (#217); 80 is kept for HTTP redirects.
+#
+#   Earlier versions of this script DNAT'd to 127.0.0.1 on the assumption
+#   that the tunnel binds loopback (the Windows portproxy setup does).
+#   That's wrong on Linux — packets landed at 127.0.0.1:80/443 with no
+#   listener and got RST. Surfaced 2026-05-08 on #377 when forward-
+#   engineer from ubuntu-client to minipc's qa.sheepdog.io timed out.
 #
 # Requirements:
 #   - sudo available (iptables + sysctl + ufw are privileged)
@@ -45,9 +55,8 @@ fi
 echo "=== Configuring LAN exposure ==="
 
 # Detect this machine's LAN IPv4 address. We bind iptables rules to this
-# specific address (not 0.0.0.0) for parity with the Windows portproxy
-# setup, which is bound to the LAN IP to avoid colliding with the
-# 127.0.0.1 listener that `minikube tunnel` creates.
+# specific address (not 0.0.0.0) so they only intercept LAN-bound traffic
+# and don't shadow other listeners on the same ports.
 LAN_IP=$(hostname -I | awk '{print $1}')
 if [[ -z "$LAN_IP" ]]; then
     echo "ERROR: could not detect LAN IP via 'hostname -I'."
@@ -55,38 +64,45 @@ if [[ -z "$LAN_IP" ]]; then
 fi
 echo "Detected LAN IP: $LAN_IP"
 
-# route_localnet=1 lets the kernel DNAT externally-arriving traffic to a
-# 127.0.0.0/8 destination. Without it, the DNAT rule below is silently
-# dropped because Linux normally treats loopback addresses on non-loopback
-# interfaces as martians.
-echo "Enabling net.ipv4.conf.all.route_localnet..."
-sudo sysctl -w net.ipv4.conf.all.route_localnet=1
+# DNAT target for ingress 80/443 and apiserver 8443 — minikube's docker-
+# driver bridge default. See § "Minikube subnet assumption" in tools.network.md.
+MINIKUBE_IP="192.168.49.2"
 
-echo "Removing any existing DNAT rules on ports 80 and 443..."
+# Clean up any pre-existing rules from older versions of this script
+# (which DNAT'd to 127.0.0.1 — broken on Linux, see header comment).
+echo "Removing legacy 127.0.0.1 DNAT rules on ports 80 and 443 (if present)..."
 for port in 80 443; do
     while sudo iptables -t nat -C PREROUTING -d "$LAN_IP" -p tcp --dport "$port" -j DNAT --to-destination "127.0.0.1:$port" 2>/dev/null; do
         sudo iptables -t nat -D PREROUTING -d "$LAN_IP" -p tcp --dport "$port" -j DNAT --to-destination "127.0.0.1:$port"
     done
 done
 
-echo "Adding DNAT: $LAN_IP:80 -> 127.0.0.1:80..."
-sudo iptables -t nat -A PREROUTING -d "$LAN_IP" -p tcp --dport 80 -j DNAT --to-destination 127.0.0.1:80
-echo "Adding DNAT: $LAN_IP:443 -> 127.0.0.1:443..."
-sudo iptables -t nat -A PREROUTING -d "$LAN_IP" -p tcp --dport 443 -j DNAT --to-destination 127.0.0.1:443
+# Disable route_localnet (was only needed for the broken 127.0.0.1 path).
+echo "Disabling net.ipv4.conf.all.route_localnet (no longer needed)..."
+sudo sysctl -w net.ipv4.conf.all.route_localnet=0 >/dev/null
+
+echo "Removing any existing DNAT rules on ports 80 and 443 (current target)..."
+for port in 80 443; do
+    while sudo iptables -t nat -C PREROUTING -d "$LAN_IP" -p tcp --dport "$port" -j DNAT --to-destination "$MINIKUBE_IP:$port" 2>/dev/null; do
+        sudo iptables -t nat -D PREROUTING -d "$LAN_IP" -p tcp --dport "$port" -j DNAT --to-destination "$MINIKUBE_IP:$port"
+    done
+    while sudo iptables -t nat -C POSTROUTING -p tcp -d "$MINIKUBE_IP" --dport "$port" -j MASQUERADE 2>/dev/null; do
+        sudo iptables -t nat -D POSTROUTING -p tcp -d "$MINIKUBE_IP" --dport "$port" -j MASQUERADE
+    done
+done
+
+echo "Adding DNAT: $LAN_IP:80 -> $MINIKUBE_IP:80..."
+sudo iptables -t nat -A PREROUTING -d "$LAN_IP" -p tcp --dport 80 -j DNAT --to-destination "$MINIKUBE_IP:80"
+sudo iptables -t nat -A POSTROUTING -p tcp -d "$MINIKUBE_IP" --dport 80 -j MASQUERADE
+echo "Adding DNAT: $LAN_IP:443 -> $MINIKUBE_IP:443..."
+sudo iptables -t nat -A PREROUTING -d "$LAN_IP" -p tcp --dport 443 -j DNAT --to-destination "$MINIKUBE_IP:443"
+sudo iptables -t nat -A POSTROUTING -p tcp -d "$MINIKUBE_IP" --dport 443 -j MASQUERADE
 
 # Apiserver (8443) needed for remote `kubectl` from another LAN machine.
-# The minikube apiserver listens on the minikube container IP (192.168.49.2
-# with the default docker-driver subnet), not 127.0.0.1, so this DNAT goes
-# to a different destination than the 80/443 ones above. MASQUERADE on the
-# forwarded traffic so the apiserver sees the host's docker-bridge IP as
-# the client and the reply path goes back through the host instead of
-# leaking out direct to the original LAN client (which would see a reply
-# from 192.168.49.2 when it sent to $LAN_IP:8443 and drop it).
-#
+# Same DNAT + MASQUERADE pattern as 80/443 above, just on a different port.
 # Pairs with --apiserver-ips=$LAN_IP (passed to setup-cluster-local.sh
 # below) so the apiserver TLS cert SAN covers the LAN address — the remote
 # client connects to https://$LAN_IP:8443 with no SAN mismatch.
-MINIKUBE_IP="192.168.49.2"
 
 echo "Removing any existing DNAT rule on port 8443..."
 while sudo iptables -t nat -C PREROUTING -d "$LAN_IP" -p tcp --dport 8443 -j DNAT --to-destination "$MINIKUBE_IP:8443" 2>/dev/null; do
@@ -101,6 +117,21 @@ while sudo iptables -t nat -C POSTROUTING -p tcp -d "$MINIKUBE_IP" --dport 8443 
 done
 echo "Adding POSTROUTING MASQUERADE: -> $MINIKUBE_IP:8443..."
 sudo iptables -t nat -A POSTROUTING -p tcp -d "$MINIKUBE_IP" --dport 8443 -j MASQUERADE
+
+# Docker's filter-table DOCKER chain DROPs all forwarded traffic to the
+# minikube container's IP except the ports minikube explicitly exposed at
+# start (8443, 22, 5000, 2376, 32443). 80 and 443 aren't on that list, so
+# our DNAT rewrites would land at the bridge and then get dropped by
+# DOCKER without these. Add ACCEPTs to DOCKER-USER (which is processed
+# before DOCKER) — Docker preserves DOCKER-USER across daemon and
+# container restarts, but it's wiped on host reboot. That's why we
+# re-apply here on every cluster setup. Surfaced 2026-05-08 on #377.
+echo "Adding DOCKER-USER ACCEPTs for $MINIKUBE_IP:80 and :443..."
+for port in 80 443; do
+    if ! sudo iptables -C DOCKER-USER -d "$MINIKUBE_IP" -p tcp --dport "$port" -j ACCEPT 2>/dev/null; then
+        sudo iptables -I DOCKER-USER 1 -d "$MINIKUBE_IP" -p tcp --dport "$port" -j ACCEPT
+    fi
+done
 
 # ufw: if active, allow inbound 80/443/8443. The DNAT rules above only
 # handle rewriting; without an INPUT allow, ufw drops the SYN before NAT
