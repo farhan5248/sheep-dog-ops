@@ -16,8 +16,6 @@
 # service release version. dev/qa keep pulling from Nexus on local minikube
 # because it's LAN-local and faster (see values-dev.yaml, values-qa.yaml).
 images:
-  db:
-    repository: ghcr.io/farhan5248/sheep-dog-dev-db
   asciidocApi:
     repository: ghcr.io/farhan5248/sheep-dog-asciidoc-api-svc
   cucumberGen:

@@ -4,21 +4,17 @@
 # Image coordinates. One block per service so individual mvn builds can override
 # just their own image tag via --set images.<svc>.tag=<version>.
 images:
-  db:
-    repository: nexus-docker.sheepdog.io/sheep-dog-dev-db
-    tag: latest
-    pullPolicy: IfNotPresent
   amq:
     repository: apache/activemq-artemis
     tag: "2.41.0"
     pullPolicy: IfNotPresent
   asciidocApi:
     repository: nexus-docker.sheepdog.io/sheep-dog-asciidoc-api-svc
-    tag: "1.25"
+    tag: "1.29-SNAPSHOT"
     pullPolicy: Always
   cucumberGen:
     repository: nexus-docker.sheepdog.io/sheep-dog-cucumber-gen-svc
-    tag: "1.23"
+    tag: "1.27-SNAPSHOT"
     pullPolicy: Always
   mcp:
     repository: nexus-docker.sheepdog.io/sheep-dog-mcp-svc
@@ -32,14 +28,18 @@ images:
 ingress:
   host: ""
 
-# PVC storage class applied to all PVCs (db, asciidoc-api, cucumber-gen).
-# "standard" for minikube, "gp2" for AWS EKS.
+# PVC storage class applied to all PVCs (asciidoc-api logs, cucumber-gen logs,
+# shared repo). "standard" for minikube, "gp2" for AWS EKS.
 pvcStorageClass: standard
 
 # PVC sizes per component
-db:
-  pvcSize: 1Gi
 asciidocApi:
   pvcSize: 1Gi
 cucumberGen:
+  pvcSize: 1Gi
+# Shared repo volume mounted by both asciidoc-api-svc and cucumber-gen-svc
+# at /repo. Bridges the cross-service file-store dependency previously served
+# by the shared MySQL DB (#388). RWO works on single-node minikube because
+# both pods land on the same node; multi-node will need RWX.
+repo:
   pvcSize: 1Gi

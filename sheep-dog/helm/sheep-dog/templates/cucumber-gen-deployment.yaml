@@ -26,12 +26,8 @@ spec:
               value: "INFO"
             - name: LOG_PATH
               value: "/logs"
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://sheep-dog-db:3306/mbt
-            - name: SPRING_DATASOURCE_USERNAME
-              value: mbt
-            - name: SPRING_DATASOURCE_PASSWORD
-              value: mbt
+            - name: SHEEPDOG_REPO_BASEDIR
+              value: "/repo/"
             - name: SPRING_ARTEMIS_HOST
               value: sheep-dog-amq
             - name: SPRING_ARTEMIS_PORT
@@ -57,6 +53,8 @@ spec:
           volumeMounts:
             - name: logs-volume
               mountPath: /logs
+            - name: repo-volume
+              mountPath: /repo
           resources:
             limits:
               memory: "4Gi"
@@ -68,3 +66,6 @@ spec:
         - name: logs-volume
           persistentVolumeClaim:
             claimName: sheep-dog-cucumber-gen-svc-pvc
+        - name: repo-volume
+          persistentVolumeClaim:
+            claimName: sheep-dog-repo-pvc

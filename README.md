@@ -10,7 +10,6 @@ sheep-dog-ops/
 │   ├── eks/                       EKS cluster setup/teardown scripts
 │   ├── grafana/                   Darmok observability Helm chart (#252, #277)
 │   ├── minikube/                  minikube cluster setup/teardown scripts
-│   ├── mysql/                     sheep-dog-dev-db image build
 │   ├── nexus/                     Nexus Helm values, PV, mkcert CA, post-install config
 │   └── ubuntu/                    Ubuntu host provisioning helpers
 ├── sheep-dog/                     app — the deployable sheep-dog stack (umbrella Helm chart + deploy scripts)

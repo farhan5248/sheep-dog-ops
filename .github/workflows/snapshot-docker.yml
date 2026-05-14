@@ -47,7 +47,6 @@ jobs:
         mvn -U install "-Dsheepdog.namespace=dev"
       env:
         GITHUB_TOKEN: ${{ github.token }}
-        MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
     - name: Deploy stubs jar
       working-directory: ./${{ inputs.project }}
       run: |

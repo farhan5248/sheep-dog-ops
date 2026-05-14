@@ -1,6 +1,6 @@
 # sheep-dog Helm chart
 
-Umbrella Helm chart for the entire `sheep-dog` stack: shared infra (db, amq, ingress) plus all microservices (asciidoc-api, cucumber-gen, mcp).
+Umbrella Helm chart for the entire `sheep-dog` stack: shared infra (amq, ingress, shared repo PVC) plus all microservices (asciidoc-api, cucumber-gen, mcp).
 
 Replaces the kustomize layout at `sheep-dog-ops/sheep-dog/kubernetes/` and the per-service `sheep-dog-svc/*/kubernetes/` directories. Those are kept as a reference for a few weeks and will be deleted later.
 
@@ -12,9 +12,9 @@ helm/
     Chart.yaml
     values.yaml         # defaults
     templates/
-      db-*.yaml         # MySQL (deployment, pvc, service)
       amq-*.yaml        # ActiveMQ Artemis (deployment, service)
       ingress.yaml      # single ingress routing all service paths
+      repo-pvc.yaml     # shared FS-backed repo, mounted by both API and gen svcs at /repo
       asciidoc-api-*.yaml
       cucumber-gen-*.yaml
       mcp-*.yaml
@@ -50,7 +50,6 @@ helm upgrade --install sheep-dog ./sheep-dog -n dev \
 ```
 
 The available override keys are:
-- `images.db.tag`
 - `images.amq.tag`
 - `images.asciidocApi.tag`
 - `images.cucumberGen.tag`
