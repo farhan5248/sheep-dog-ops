@@ -1,8 +1,9 @@
 ```
-kubectl config get-contexts          # pipe through `cat` if output looks empty (snap kubectl quirk)
-kubectl config use-context ubuntu-client    # local cluster (was "minikube")
-kubectl config use-context ubuntu-sandbox   # remote minipc cluster
-kubectl config use-context arn:aws:eks:...  # EKS as before
+kubectl config get-contexts            # pipe through `cat` if output looks empty (snap kubectl quirk)
+kubectl config use-context minikube              # local cluster
+kubectl config use-context minikube-sandbox      # remote sandbox cluster
+kubectl config use-context minikube-team         # remote team cluster (once set up)
+kubectl config use-context arn:aws:eks:...       # EKS as before
 kubectl config current-context
 ```
 
@@ -15,9 +16,9 @@ tail -f /tmp/setup-cluster.log
 ```
 
 ```
-kubectl --context=ubuntu-sandbox scale deployment,statefulset --all -n qa --replicas=0
-kubectl --context=ubuntu-sandbox scale deployment,statefulset --all -n qa --replicas=1
-kubectl --context=ubuntu-sandbox get deploy,sts -n qa
+kubectl --context=minikube-sandbox scale deployment,statefulset --all -n qa --replicas=0
+kubectl --context=minikube-sandbox scale deployment,statefulset --all -n qa --replicas=1
+kubectl --context=minikube-sandbox get deploy,sts -n qa
 ```
 
 ```
