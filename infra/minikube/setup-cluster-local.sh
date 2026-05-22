@@ -22,13 +22,20 @@ if [[ -n "$APISERVER_IP" ]]; then
 fi
 
 echo "Starting minikube with --memory=$MEMORY_MB --cpus=$CPUS --disk-size=$DISK_SIZE..."
-# On the Darmok host, mount $HOME/minikube-data/darmok-metrics so Darmok's
-# per-scenario metrics.csv is readable by the Grafana pod (sheep-dog-main#252 / #281).
-# Other machines skip the mount (directory doesn't exist).
-DARMOK_METRICS_DIR="$HOME/minikube-data/darmok-metrics"
-if [[ -d "$DARMOK_METRICS_DIR" ]]; then
-    echo "Mounting $DARMOK_METRICS_DIR into minikube at /mnt/darmok-metrics..."
-    minikube start --cpus="$CPUS" --memory="$MEMORY_MB" --disk-size="$DISK_SIZE" --mount --mount-string="$DARMOK_METRICS_DIR:/mnt/darmok-metrics" "${APISERVER_FLAG[@]}"
+# Mount the entire $HOME/minikube-data parent dir at /mnt so every per-role
+# subdir comes along under a stable in-VM path. minikube's --mount-string is
+# single-valued, so a parent-dir mount is the only way to expose more than
+# one host directory. Today's consumers:
+#   - $HOME/minikube-data/darmok-metrics -> /mnt/darmok-metrics
+#     Darmok per-scenario metrics.csv read by the Grafana pod (#252 / #281).
+#   - $HOME/minikube-data/nexus -> /mnt/nexus
+#     Nexus PV hostPath on the Nexus host (#378). Survives minikube delete.
+# Machines that don't host either still get the mount if the parent exists;
+# harmless. Machines that have neither subdir skip the mount entirely.
+MINIKUBE_DATA_DIR="$HOME/minikube-data"
+if [[ -d "$MINIKUBE_DATA_DIR" ]]; then
+    echo "Mounting $MINIKUBE_DATA_DIR into minikube at /mnt..."
+    minikube start --cpus="$CPUS" --memory="$MEMORY_MB" --disk-size="$DISK_SIZE" --mount --mount-string="$MINIKUBE_DATA_DIR:/mnt" "${APISERVER_FLAG[@]}"
 else
     minikube start --cpus="$CPUS" --memory="$MEMORY_MB" --disk-size="$DISK_SIZE" "${APISERVER_FLAG[@]}"
 fi
