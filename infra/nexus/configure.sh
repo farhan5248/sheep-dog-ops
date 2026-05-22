@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Configure Nexus for hosting helm charts, Maven artifacts, and Docker images.
-# Linux port of configure.bat — same REST sequence, idempotent-ish.
+# Idempotent-ish — Nexus REST returns 4xx on already-exists, which we tolerate.
 #
 # Prereqs:
 #   - Nexus reachable at https://nexus.sheepdog.io (hosts file + minikube
@@ -16,6 +16,8 @@
 #   3. Create a `nx-helm-deployer` role with permissions on helm-hosted +
 #      Maven repos (maven-releases, maven-snapshots, maven-public)
 #   4. Create a `helm-deployer` user with that role
+#   5. Enable anonymous read access (required for maven-public proxy reads
+#      from unauthenticated builds; ships disabled in Nexus 3.71+ CE)
 #
 # Maven repos (maven-releases, maven-snapshots, maven-central, maven-public)
 # ship as Nexus defaults and don't need creation here.
@@ -90,6 +92,17 @@ curl -u "$ADMIN:$NEXUS_ADMIN_PW" -X POST \
     -H "Content-Type: application/json" \
     -w "$CURL_FMT" \
     -d "{\"userId\":\"helm-deployer\",\"firstName\":\"Helm\",\"lastName\":\"Deployer\",\"emailAddress\":\"helm-deployer@sheepdog.local\",\"password\":\"$NEXUS_DEPLOY_PW\",\"status\":\"active\",\"roles\":[\"nx-helm-deployer\"]}"
+echo
+
+echo "=== 5. Enable anonymous read access ==="
+# PUT is idempotent — safe to re-run against a Nexus that already has
+# anonymous enabled. Required for unauthenticated maven-public proxy reads
+# (e.g. publish-eclipse.sh, per-repo snapshot workflows). Surfaced on #393.
+curl -u "$ADMIN:$NEXUS_ADMIN_PW" -X PUT \
+    "$NEXUS_URL/service/rest/v1/security/anonymous" \
+    -H "Content-Type: application/json" \
+    -w "$CURL_FMT" \
+    -d '{"enabled":true,"userId":"anonymous","realmName":"NexusAuthorizingRealm"}'
 echo
 
 echo "Done."
