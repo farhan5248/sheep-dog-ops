@@ -5,19 +5,26 @@
 # ingress address.
 #
 # Usage: deploy-to-minikube.sh [env] [chart-version] [kubectl-context]
-# Defaults: env=dev, chart-version=latest, kubectl-context=minikube
+# Defaults: env=dev, chart-version=latest, kubectl-context derived from env
+#   - dev  → minikube-sandbox  (LAN cluster on ubuntu-sandbox)
+#   - qa   → minikube-team     (LAN cluster on ubuntu-team)
+#   - else → minikube          (local cluster fallback)
 #
-# The context arg lets a -client machine (which has its own local context
-# renamed per #376, e.g. "ubuntu-client") deploy to a remote LAN cluster
-# (e.g. "ubuntu-sandbox") without touching the script. Hosts whose local
-# context is still called "minikube" can omit it. See tools.network.md
-# § Remote kubectl access.
+# The 3rd arg overrides the derived default — pass "minikube" to force
+# local-fallback (e.g. when both servers are down — see lcl.sheepdog.io
+# in tools.ubuntu.client.md § /etc/hosts). See tools.network.md § Remote
+# kubectl access for the context naming convention. Issue #389.
 
 set -euo pipefail
 
 ENV_NAME="${1:-dev}"
 CHART_VERSION="${2:-latest}"
-CONTEXT="${3:-minikube}"
+case "$ENV_NAME" in
+    dev) DEFAULT_CONTEXT=minikube-sandbox ;;
+    qa)  DEFAULT_CONTEXT=minikube-team ;;
+    *)   DEFAULT_CONTEXT=minikube ;;
+esac
+CONTEXT="${3:-$DEFAULT_CONTEXT}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

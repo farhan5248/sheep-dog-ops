@@ -14,19 +14,21 @@ REM
 REM Defaults:
 REM   env             = dev
 REM   version         = latest        (resolves to newest chart in Nexus; see setup-namespace.bat)
-REM   kubectl-context = minikube
+REM   kubectl-context = derived from env:
+REM                       dev  -> minikube-sandbox  (LAN cluster on ubuntu-sandbox)
+REM                       qa   -> minikube-team     (LAN cluster on ubuntu-team)
+REM                       else -> minikube          (local cluster fallback)
 REM
 REM Examples:
-REM   deploy-to-minikube.bat                              -- dev namespace, latest chart, local minikube
-REM   deploy-to-minikube.bat qa                           -- qa  namespace, latest chart, local minikube
-REM   deploy-to-minikube.bat qa 0.2.3                     -- qa  namespace, pinned 0.2.3, local minikube
-REM   deploy-to-minikube.bat qa latest ubuntu-sandbox     -- qa namespace, latest chart, remote ubuntu-sandbox cluster
+REM   deploy-to-minikube.bat                              -- dev ns, latest chart, ubuntu-sandbox
+REM   deploy-to-minikube.bat qa                           -- qa  ns, latest chart, ubuntu-team
+REM   deploy-to-minikube.bat qa 0.2.3                     -- qa  ns, pinned 0.2.3, ubuntu-team
+REM   deploy-to-minikube.bat dev latest minikube          -- dev ns, latest chart, force local minikube
 REM
-REM The context arg lets a -client machine (which has its own local
-REM context renamed per #376, e.g. "ubuntu-client") deploy to a remote
-REM LAN cluster (e.g. "ubuntu-sandbox") without touching the script.
-REM Hosts whose local context is still called "minikube" can omit it.
-REM See tools.network.md § Remote kubectl access.
+REM The 3rd arg overrides the derived default -- pass "minikube" to
+REM force local-fallback (e.g. when both servers are down -- see
+REM lcl.sheepdog.io in tools.ubuntu.client.md). See tools.network.md
+REM Remote kubectl access for the context naming convention. Issue #389.
 
 set ENV=%1
 set CHART_VERSION=%2
@@ -34,7 +36,15 @@ set CONTEXT=%3
 
 if "%ENV%"=="" set ENV=dev
 if "%CHART_VERSION%"=="" set CHART_VERSION=latest
-if "%CONTEXT%"=="" set CONTEXT=minikube
+if "%CONTEXT%"=="" (
+    if "%ENV%"=="dev" (
+        set CONTEXT=minikube-sandbox
+    ) else if "%ENV%"=="qa" (
+        set CONTEXT=minikube-team
+    ) else (
+        set CONTEXT=minikube
+    )
+)
 
 set SCRIPTS_DIR=%~dp0
 
