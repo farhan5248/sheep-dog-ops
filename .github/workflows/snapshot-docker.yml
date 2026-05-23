@@ -44,22 +44,6 @@ jobs:
     - name: Run Maven
       working-directory: ./${{ inputs.project }}
       run: |
-        mvn -U install "-Dsheepdog.namespace=dev"
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-    - name: Deploy stubs jar
-      working-directory: ./${{ inputs.project }}
-      run: |
-        if ls target/*-stubs.jar 1> /dev/null 2>&1; then
-          mvn deploy:deploy-file \
-            -DpomFile=pom.xml \
-            -Dfile=$(ls target/*-stubs.jar) \
-            -Dclassifier=stubs \
-            -Dpackaging=jar \
-            -DrepositoryId=nexus-snapshots \
-            -Durl=https://nexus.sheepdog.io/repository/maven-snapshots/
-        else
-          echo "No stubs jar — skipping"
-        fi
+        mvn -U deploy "-Dsheepdog.namespace=dev"
       env:
         GITHUB_TOKEN: ${{ github.token }}
