@@ -44,7 +44,7 @@ jobs:
       contents: write
       packages: write
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         # Full history so ReleaseMojo's hasSourceChanges can find the most
         # recent [Release] commit; with the default depth-1 shallow clone

@@ -22,11 +22,11 @@ jobs:
       packages: read
     steps:
       - name: Checkout sheep-dog-ops
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: sheep-dog-ops
       - name: Checkout sheep-dog-specs
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: farhan5248/sheep-dog-specs
           path: sheep-dog-specs

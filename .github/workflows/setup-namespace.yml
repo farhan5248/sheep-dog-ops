@@ -34,7 +34,7 @@ jobs:
 
     steps:
       - name: Checkout sheep-dog-ops
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: farhan5248/sheep-dog-ops
 
