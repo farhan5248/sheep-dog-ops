@@ -72,6 +72,12 @@ jobs:
         git config --local user.email "${{ vars.ACTIONS_BOT_EMAIL }}"
     - name: Release
       working-directory: ./${{ inputs.project }}
-      run: mvn org.farhan:sheep-dog-mgmt-maven-plugin:release "-DpreparationGoals=${{ inputs.preparation_goals }}"
+      # -U forces a fresh remote metadata check so we don't trip Maven's
+      # "negative cache" of a not-found release version. Surfaces when a
+      # new release of mgmt-plugin (or any plugin/dep) is pushed to Nexus
+      # after a runner has already cached a 404 for it during this 24h
+      # window. Without -U the runner believes the release doesn't exist
+      # and fails plugin resolution.
+      run: mvn -U org.farhan:sheep-dog-mgmt-maven-plugin:release "-DpreparationGoals=${{ inputs.preparation_goals }}"
       env:
         GITHUB_TOKEN: ${{ github.token }}
