@@ -16,9 +16,14 @@ tail -f /tmp/setup-cluster.log
 ```
 
 ```
-kubectl --context=minikube-sandbox scale deployment,statefulset --all -n qa --replicas=0
-kubectl --context=minikube-sandbox scale deployment,statefulset --all -n qa --replicas=1
-kubectl --context=minikube-sandbox get deploy,sts -n qa
+kubectl --context=minikube-team scale deployment,statefulset --all -n qa --replicas=0
+kubectl --context=minikube-team scale deployment,statefulset --all -n qa --replicas=1
+kubectl --context=minikube-team get deploy,sts -n qa
+```
+
+```
+kubectl --context=minikube-team -n qa rollout restart deployment/sheep-dog-asciidoc-api-svc
+kubectl --context=minikube-team -n qa rollout status deployment/sheep-dog-asciidoc-api-svc
 ```
 
 ```
