@@ -21,7 +21,7 @@ spec:
           imagePullPolicy: {{ .Values.images.graphmlApi.pullPolicy | quote }}
           env:
             - name: JAVA_OPTS
-              value: "-Xmx3g -Xms1g"
+              value: "-Xmx1g -Xms256m"
             - name: LOG_LEVEL
               value: "INFO"
             - name: LOG_PATH
@@ -53,10 +53,10 @@ spec:
               mountPath: /repo
           resources:
             limits:
-              memory: "4Gi"
+              memory: "1536Mi"
               cpu: "500m"
             requests:
-              memory: "2Gi"
+              memory: "512Mi"
               cpu: "250m"
       volumes:
         - name: logs-volume
