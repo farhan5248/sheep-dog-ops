@@ -44,6 +44,6 @@ jobs:
     - name: Run Maven
       working-directory: ./${{ inputs.project }}
       run: |
-        mvn -U deploy "-Dsheepdog.namespace=dev"
+        mvn -U deploy "-Dsheepdog.namespace=int"
       env:
         GITHUB_TOKEN: ${{ github.token }}

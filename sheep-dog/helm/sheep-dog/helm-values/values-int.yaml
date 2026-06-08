@@ -1,0 +1,9 @@
+# Integration-testing (CI/CD) environment overrides for the sheep-dog umbrella chart.
+# Pinned to minikube-team (ubuntu-team, 32 GB) so the full 4-service stack has
+# headroom the dev node (ubuntu-sandbox, 8 GB) lacked after #451. See #455.
+# Deploy with:
+#   helm upgrade --install sheep-dog <chart-path> -n int --create-namespace \
+#     -f helm-values/values-int.yaml
+
+ingress:
+  host: int.sheepdog.io

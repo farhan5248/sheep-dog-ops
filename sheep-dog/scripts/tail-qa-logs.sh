@@ -5,6 +5,7 @@
 # Targets the cluster by kubectl context, the same way deploy-to-minikube.sh
 # does, so this works from ubuntu-client over the registered remote contexts:
 #   qa  -> minikube-team     (ubuntu-team)
+#   int -> minikube-team     (ubuntu-team — CI/CD integration testing, #455)
 #   dev -> minikube-sandbox  (ubuntu-sandbox)
 #   *   -> minikube          (local fallback)
 #
@@ -35,12 +36,13 @@ svc="$1"; shift
 ENV_NAME="qa"
 if [[ $# -ge 1 ]]; then
     case "$1" in
-        qa|dev|*minikube*) ENV_NAME="$1"; shift ;;
+        qa|int|dev|*minikube*) ENV_NAME="$1"; shift ;;
     esac
 fi
 
 case "$ENV_NAME" in
     qa)  CONTEXT="minikube-team" ;;
+    int) CONTEXT="minikube-team" ;;
     dev) CONTEXT="minikube-sandbox" ;;
     *)   CONTEXT="minikube" ;;
 esac

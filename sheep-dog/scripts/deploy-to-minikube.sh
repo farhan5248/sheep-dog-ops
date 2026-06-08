@@ -8,6 +8,7 @@
 # Defaults: env=dev, chart-version=latest, kubectl-context derived from env
 #   - dev  → minikube-sandbox  (LAN cluster on ubuntu-sandbox)
 #   - qa   → minikube-team     (LAN cluster on ubuntu-team)
+#   - int  → minikube-team     (LAN cluster on ubuntu-team — CI/CD integration testing, #455)
 #   - else → minikube          (local cluster fallback)
 #
 # The 3rd arg overrides the derived default — pass "minikube" to force
@@ -22,6 +23,7 @@ CHART_VERSION="${2:-latest}"
 case "$ENV_NAME" in
     dev) DEFAULT_CONTEXT=minikube-sandbox ;;
     qa)  DEFAULT_CONTEXT=minikube-team ;;
+    int) DEFAULT_CONTEXT=minikube-team ;;
     *)   DEFAULT_CONTEXT=minikube ;;
 esac
 CONTEXT="${3:-$DEFAULT_CONTEXT}"

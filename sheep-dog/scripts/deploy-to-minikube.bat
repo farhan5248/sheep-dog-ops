@@ -17,6 +17,7 @@ REM   version         = latest        (resolves to newest chart in Nexus; see se
 REM   kubectl-context = derived from env:
 REM                       dev  -> minikube-sandbox  (LAN cluster on ubuntu-sandbox)
 REM                       qa   -> minikube-team     (LAN cluster on ubuntu-team)
+REM                       int  -> minikube-team     (LAN cluster on ubuntu-team -- CI/CD integration testing, #455)
 REM                       else -> minikube          (local cluster fallback)
 REM
 REM Examples:
@@ -40,6 +41,8 @@ if "%CONTEXT%"=="" (
     if "%ENV%"=="dev" (
         set CONTEXT=minikube-sandbox
     ) else if "%ENV%"=="qa" (
+        set CONTEXT=minikube-team
+    ) else if "%ENV%"=="int" (
         set CONTEXT=minikube-team
     ) else (
         set CONTEXT=minikube
