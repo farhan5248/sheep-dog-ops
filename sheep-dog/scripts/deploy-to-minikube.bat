@@ -14,22 +14,20 @@ REM
 REM Defaults:
 REM   env             = dev
 REM   version         = latest        (resolves to newest chart in Nexus; see setup-namespace.bat)
-REM   kubectl-context = derived from env:
-REM                       dev  -> minikube-sandbox  (LAN cluster on ubuntu-sandbox)
-REM                       qa   -> minikube-team     (LAN cluster on ubuntu-team)
-REM                       int  -> minikube-team     (LAN cluster on ubuntu-team -- CI/CD integration testing, #455)
-REM                       else -> minikube          (local cluster fallback)
+REM   kubectl-context = minikube-<env>  (derived uniformly from env, #456):
+REM                       dev -> minikube-dev, int -> minikube-int, qa -> minikube-qa
+REM                       (per-machine alias contexts; force local with 3rd arg "minikube")
 REM
 REM Examples:
-REM   deploy-to-minikube.bat                              -- dev ns, latest chart, ubuntu-sandbox
-REM   deploy-to-minikube.bat qa                           -- qa  ns, latest chart, ubuntu-team
-REM   deploy-to-minikube.bat qa 0.2.3                     -- qa  ns, pinned 0.2.3, ubuntu-team
+REM   deploy-to-minikube.bat                              -- dev ns, latest chart, minikube-dev
+REM   deploy-to-minikube.bat qa                           -- qa  ns, latest chart, minikube-qa
+REM   deploy-to-minikube.bat qa 0.2.3                     -- qa  ns, pinned 0.2.3, minikube-qa
 REM   deploy-to-minikube.bat dev latest minikube          -- dev ns, latest chart, force local minikube
 REM
 REM The 3rd arg overrides the derived default -- pass "minikube" to
 REM force local-fallback (e.g. when both servers are down -- see
 REM lcl.sheepdog.io in tools.ubuntu.client.md). See tools.network.md
-REM Remote kubectl access for the context naming convention. Issue #389.
+REM Remote kubectl access for the context naming convention. Issues #389, #456.
 
 set ENV=%1
 set CHART_VERSION=%2
@@ -37,17 +35,9 @@ set CONTEXT=%3
 
 if "%ENV%"=="" set ENV=dev
 if "%CHART_VERSION%"=="" set CHART_VERSION=latest
-if "%CONTEXT%"=="" (
-    if "%ENV%"=="dev" (
-        set CONTEXT=minikube-sandbox
-    ) else if "%ENV%"=="qa" (
-        set CONTEXT=minikube-team
-    ) else if "%ENV%"=="int" (
-        set CONTEXT=minikube-team
-    ) else (
-        set CONTEXT=minikube
-    )
-)
+REM Context derives uniformly from env (#456): dev->minikube-dev,
+REM int->minikube-int, qa->minikube-qa (per-machine alias contexts).
+if "%CONTEXT%"=="" set CONTEXT=minikube-%ENV%
 
 set SCRIPTS_DIR=%~dp0
 

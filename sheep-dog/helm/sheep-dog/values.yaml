@@ -36,13 +36,29 @@ ingress:
 # shared repo). "standard" for minikube, "gp2" for AWS EKS.
 pvcStorageClass: standard
 
-# PVC sizes per component
+# Per-service enable toggles (#456). Flip a service off in a values-<ns>.yaml to
+# scale the stack down for a memory-constrained namespace (e.g. dev on the 8 GB
+# sandbox node). Defaults are all-on so existing deploys are unchanged.
+#
+# Dependency closure — enabling a service requires its deps to be enabled too:
+#   graphmlApi / asciidocApi  -> (amq + repo, both derived below)
+#   cucumberGen               -> asciidocApi (+ amq + repo)
+#   mcp                       -> asciidocApi + cucumberGen (+ amq; mcp needs no repo)
+# amq and the shared repo PVC are NOT toggled directly: they render iff any of
+# their consumers (asciidocApi/cucumberGen/graphmlApi) is enabled.
+
+# PVC sizes + enable flag per component
 asciidocApi:
+  enabled: true
   pvcSize: 1Gi
 cucumberGen:
+  enabled: true
   pvcSize: 1Gi
 graphmlApi:
+  enabled: true
   pvcSize: 1Gi
+mcp:
+  enabled: true
 # Shared repo volume mounted by both asciidoc-api-svc and cucumber-gen-svc
 # at /repo. Bridges the cross-service file-store dependency previously served
 # by the shared MySQL DB (#388). RWO works on single-node minikube because

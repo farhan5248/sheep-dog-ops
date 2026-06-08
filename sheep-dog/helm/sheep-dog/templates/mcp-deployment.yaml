@@ -1,3 +1,4 @@
+{{- if .Values.mcp.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -47,3 +48,4 @@ spec:
       volumes:
         - name: logs-volume
           emptyDir: {}
+{{- end }}
