@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sheep-dog-graphml-api-svc
+  labels:
+    app: sheep-dog
+    component: sheep-dog-graphml-api-svc
+spec:
+  selector:
+    component: sheep-dog-graphml-api-svc
+  ports:
+    - name: sheep-dog-graphml-api-svc
+      port: 80
+      targetPort: 8080
+  type: ClusterIP

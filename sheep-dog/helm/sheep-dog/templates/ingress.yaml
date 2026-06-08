@@ -36,6 +36,27 @@ spec:
                 name: sheep-dog-cucumber-gen-svc
                 port:
                   number: 80
+          - path: /graphmlmodel
+            pathType: Prefix
+            backend:
+              service:
+                name: sheep-dog-graphml-api-svc
+                port:
+                  number: 80
+          - path: /graphml
+            pathType: Prefix
+            backend:
+              service:
+                name: sheep-dog-graphml-api-svc
+                port:
+                  number: 80
+          - path: /sheep-dog-graphml-api-svc/actuator
+            pathType: Prefix
+            backend:
+              service:
+                name: sheep-dog-graphml-api-svc
+                port:
+                  number: 80
           - path: /sheep-dog-asciidoc-api-svc/actuator
             pathType: Prefix
             backend:

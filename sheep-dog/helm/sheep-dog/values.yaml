@@ -16,6 +16,10 @@ images:
     repository: nexus-docker.sheepdog.io/sheep-dog-cucumber-gen-svc
     tag: "1.29"
     pullPolicy: Always
+  graphmlApi:
+    repository: nexus-docker.sheepdog.io/sheep-dog-graphml-api-svc
+    tag: "1.0-SNAPSHOT"
+    pullPolicy: Always
   mcp:
     repository: nexus-docker.sheepdog.io/sheep-dog-mcp-svc
     tag: "1.27"
@@ -36,6 +40,8 @@ pvcStorageClass: standard
 asciidocApi:
   pvcSize: 1Gi
 cucumberGen:
+  pvcSize: 1Gi
+graphmlApi:
   pvcSize: 1Gi
 # Shared repo volume mounted by both asciidoc-api-svc and cucumber-gen-svc
 # at /repo. Bridges the cross-service file-store dependency previously served
