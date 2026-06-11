@@ -8,7 +8,10 @@ images:
     repository: nexus-docker.sheepdog.io/graphwalker-ui
     tag: "4.3.3"
     pullPolicy: Always
-  # graphwalkerSvc image added with the path-gen service (sheep-dog-main#462).
+  graphwalkerSvc:
+    repository: nexus-docker.sheepdog.io/graphwalker-svc
+    tag: "1.0-SNAPSHOT"
+    pullPolicy: Always
 
 # GraphWalker Studio web model editor. Stateless, served on its own host.
 # Ingress rule renders only when both enabled and host are set.
@@ -16,8 +19,8 @@ graphwalkerUi:
   enabled: true
   host: studio.graphwalker.io
 
-# Path-generation REST service (sheep-dog-main#462). Off until the service exists;
-# the api.graphwalker.io ingress route and image block come online with it.
+# Path-generation REST service (sheep-dog-main#462). Synchronous REST over
+# GraphWalker offline; serves the api.graphwalker.io ingress route.
 graphwalkerSvc:
-  enabled: false
+  enabled: true
   host: api.graphwalker.io

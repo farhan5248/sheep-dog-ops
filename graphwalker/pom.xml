@@ -1,0 +1,103 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.farhan</groupId>
+    <artifactId>graphwalker-chart</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>GraphWalker Product Helm Chart</name>
+    <description>
+        Helm chart for the standalone GraphWalker product (Studio UI +
+        path-gen service). A maven-shaped wrapper around the chart: no Java,
+        no jar. It exists to package + push the chart to Nexus OCI via
+        io.kokuwa.maven helm-maven-plugin, mirroring sheep-dog-ops/sheep-dog
+        but leaner — no version oracle / release dance, because the product's
+        image tags are static (it wraps a pinned upstream tool). Published
+        locally with `mvn clean deploy` (no GitHub runners — this is a
+        low-churn third-party wrapper).
+    </description>
+
+    <repositories>
+        <repository>
+            <id>nexus</id>
+            <url>https://nexus.sheepdog.io/repository/maven-public/</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <!-- The chart artifact itself is pushed to Nexus OCI via the helm
+             push exec below. These entries exist so `mvn deploy` can deploy
+             the pom artifact without failing. -->
+        <repository>
+            <id>nexus-releases</id>
+            <url>https://nexus.sheepdog.io/repository/maven-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>nexus-snapshots</id>
+            <url>https://nexus.sheepdog.io/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.kokuwa.maven</groupId>
+                <artifactId>helm-maven-plugin</artifactId>
+                <version>6.13.0</version>
+                <configuration>
+                    <chartDirectory>${project.basedir}/helm/graphwalker</chartDirectory>
+                    <!-- Override Chart.yaml version+appVersion with the pom
+                         version so the packaged .tgz always matches the pom. -->
+                    <chartVersion>${project.version}</chartVersion>
+                    <appVersion>${project.version}</appVersion>
+                    <useLocalHelmBinary>true</useLocalHelmBinary>
+                    <autoDetectLocalHelmBinary>true</autoDetectLocalHelmBinary>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>helm-lint</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>lint</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>helm-package</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Push the packaged chart to Nexus OCI via exec-maven-plugin
+                 instead of helm-maven-plugin:push (the kokuwa push goal 6.13.0
+                 has an OCI URL-parsing bug — see sheep-dog-ops/sheep-dog pom and
+                 farhan5248/sheep-dog-main#32). Prereq: `helm registry login
+                 nexus-docker.sheepdog.io` on the host. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>helm-push</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>helm</executable>
+                            <arguments>
+                                <argument>push</argument>
+                                <argument>${project.build.directory}/helm/repo/graphwalker-${project.version}.tgz</argument>
+                                <argument>oci://nexus-docker.sheepdog.io/helm-hosted</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

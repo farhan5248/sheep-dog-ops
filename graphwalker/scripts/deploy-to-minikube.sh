@@ -6,9 +6,11 @@
 # Usage: deploy-to-minikube.sh [namespace] [kubectl-context]
 # Defaults: namespace=graphwalker, context=minikube-graphwalker
 #
-# Unlike the sheep-dog deploy, the chart is referenced locally (low-churn
-# third-party product, no OCI publish step). Images are built/pushed by hand
-# from the graphwalker repo modules (mvn clean package).
+# This script deploys the chart straight from the local working tree for quick
+# Studio iterations. The chart is also published to Nexus OCI by this repo's pom
+# (`mvn clean deploy`, locally — no GitHub runners); graphwalker-svc's build
+# pulls that published chart. Images are built/pushed from the graphwalker repo
+# modules (mvn clean package / install).
 
 set -euo pipefail
 
