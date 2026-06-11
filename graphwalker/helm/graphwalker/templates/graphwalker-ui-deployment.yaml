@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: graphwalker-ui
   labels:
-    app: sheep-dog
+    app: graphwalker
     component: graphwalker-ui
 spec:
   selector:
@@ -13,7 +13,7 @@ spec:
   template:
     metadata:
       labels:
-        app: sheep-dog
+        app: graphwalker
         component: graphwalker-ui
     spec:
       containers:
@@ -33,6 +33,14 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /studio.html
+              port: 9090
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 6
           resources:
             limits:
               memory: "1Gi"

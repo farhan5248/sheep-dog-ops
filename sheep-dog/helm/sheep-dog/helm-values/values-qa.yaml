@@ -5,8 +5,3 @@
 
 ingress:
   host: qa.sheepdog.io
-
-# GraphWalker Studio runs in qa (default-off elsewhere) on its own host (#454).
-graphwalkerUi:
-  enabled: true
-  host: studio.sheepdog.io

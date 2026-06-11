@@ -1,0 +1,23 @@
+# Values for the standalone GraphWalker product chart.
+# Deploys to the `graphwalker` namespace on minikube-team (context minikube-graphwalker).
+# Single environment for now; add helm-values/values-<env>.yaml later if needed.
+
+# Image coordinates. Built/pushed by the modules in the graphwalker repo.
+images:
+  graphwalkerUi:
+    repository: nexus-docker.sheepdog.io/graphwalker-ui
+    tag: "4.3.3"
+    pullPolicy: Always
+  # graphwalkerSvc image added with the path-gen service (sheep-dog-main#462).
+
+# GraphWalker Studio web model editor. Stateless, served on its own host.
+# Ingress rule renders only when both enabled and host are set.
+graphwalkerUi:
+  enabled: true
+  host: studio.graphwalker.io
+
+# Path-generation REST service (sheep-dog-main#462). Off until the service exists;
+# the api.graphwalker.io ingress route and image block come online with it.
+graphwalkerSvc:
+  enabled: false
+  host: api.graphwalker.io

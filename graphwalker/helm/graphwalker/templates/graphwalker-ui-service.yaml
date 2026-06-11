@@ -4,7 +4,7 @@ kind: Service
 metadata:
   name: graphwalker-ui
   labels:
-    app: sheep-dog
+    app: graphwalker
     component: graphwalker-ui
 spec:
   selector:
