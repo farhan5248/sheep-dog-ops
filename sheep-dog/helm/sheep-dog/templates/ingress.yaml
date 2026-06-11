@@ -93,3 +93,18 @@ spec:
                 port:
                   number: 80
           {{- end }}
+    {{- if and .Values.graphwalkerUi.enabled .Values.graphwalkerUi.host }}
+    -
+      host: {{ .Values.graphwalkerUi.host | quote }}
+      http:
+        paths:
+          # GraphWalker Studio SPA loads assets from root, so it gets its own
+          # host (studio.sheepdog.io) serving "/" rather than a path prefix (#454).
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: graphwalker-ui
+                port:
+                  number: 80
+    {{- end }}

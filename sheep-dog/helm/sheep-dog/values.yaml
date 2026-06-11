@@ -24,6 +24,12 @@ images:
     repository: nexus-docker.sheepdog.io/sheep-dog-mcp-svc
     tag: "1.28"
     pullPolicy: Always
+  # GraphWalker Studio model editor, packaged headless by the graphwalker-ui
+  # module in sheep-dog-svc. Tag tracks the upstream studio release (#454).
+  graphwalkerUi:
+    repository: nexus-docker.sheepdog.io/graphwalker-ui
+    tag: "4.3.3"
+    pullPolicy: Always
 
 # Ingress host for the sheep-dog ingress.
 # Set on dev/qa (local minikube with hosts file entries). Leave empty on prod
@@ -59,6 +65,15 @@ graphmlApi:
   pvcSize: 1Gi
 mcp:
   enabled: true
+# GraphWalker Studio UI (#454). Stateless, no PVC. Default OFF — it's a qa-only
+# editing tool, and leaving it on would spin a 1Gi pod on the memory-constrained
+# dev sandbox during every pom-driven integration-test deploy (#456). Opt in per
+# namespace (qa) via helm-values/. Served on its own host (the SPA loads assets
+# from root), so the ingress rule renders only when both `enabled` and `host`
+# are set — a blank host emits no hostless catch-all rule.
+graphwalkerUi:
+  enabled: false
+  host: ""
 # Shared repo volume mounted by both asciidoc-api-svc and cucumber-gen-svc
 # at /repo. Bridges the cross-service file-store dependency previously served
 # by the shared MySQL DB (#388). RWO works on single-node minikube because
