@@ -24,3 +24,10 @@ graphwalkerUi:
 graphwalkerSvc:
   enabled: true
   host: api.graphwalker.io
+  # Kubernetes Secret holding the GitHub token used to read coverage models from
+  # the private specs repo (sheep-dog-main#470). Create it on the cluster with:
+  #   kubectl create secret generic graphwalker-github -n graphwalker \
+  #     --from-literal=token=<fine-grained-PAT>
+  # Only the name/key are in git; the token value lives only in cluster etcd.
+  githubSecretName: graphwalker-github
+  githubSecretKey: token

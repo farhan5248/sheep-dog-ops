@@ -23,6 +23,16 @@ spec:
           env:
             - name: JAVA_OPTS
               value: "-Xmx512m -Xms256m"
+            {{- if .Values.graphwalkerSvc.githubSecretName }}
+            # GitHub token for reading coverage models from the private specs
+            # repo (sheep-dog-main#470). The Secret is created out-of-band on the
+            # cluster (kubectl create secret) — its value never lives in git.
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.graphwalkerSvc.githubSecretName }}
+                  key: {{ .Values.graphwalkerSvc.githubSecretKey | default "token" }}
+            {{- end }}
           ports:
             - containerPort: 8080
           livenessProbe:
