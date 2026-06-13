@@ -47,3 +47,4 @@ jobs:
         mvn -U deploy "-Dsheepdog.namespace=int"
       env:
         GITHUB_TOKEN: ${{ github.token }}
+        SHEEP_DOG_SPECS_TOKEN: ${{ secrets.SHEEP_DOG_SPECS_TOKEN }}
