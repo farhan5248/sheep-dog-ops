@@ -1,0 +1,61 @@
+{{- if .Values.graphmlApi.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graphwalker-svc
+  labels:
+    app: sheep-dog
+    component: graphwalker-svc
+spec:
+  selector:
+    matchLabels:
+      component: graphwalker-svc
+  template:
+    metadata:
+      labels:
+        app: sheep-dog
+        component: graphwalker-svc
+    spec:
+      containers:
+        - name: graphwalker-svc
+          image: "{{ .Values.images.graphwalkerSvc.repository }}:{{ .Values.images.graphwalkerSvc.tag }}"
+          imagePullPolicy: {{ .Values.images.graphwalkerSvc.pullPolicy | quote }}
+          env:
+            - name: JAVA_OPTS
+              value: "-Xmx512m -Xms256m"
+            {{- if .Values.graphwalkerSvc.githubSecretName }}
+            # GitHub token for reading/pushing coverage models in the private specs
+            # repo (sheep-dog-main#470/#477). The Secret is created out-of-band on the
+            # cluster (kubectl create secret) — its value never lives in git.
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.graphwalkerSvc.githubSecretName }}
+                  key: {{ .Values.graphwalkerSvc.githubSecretKey | default "token" }}
+            {{- end }}
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /graphwalker-svc/actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /graphwalker-svc/actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+{{- end }}

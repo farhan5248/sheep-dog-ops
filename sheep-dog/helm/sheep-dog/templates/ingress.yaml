@@ -93,3 +93,30 @@ spec:
                 port:
                   number: 80
           {{- end }}
+    {{- if and .Values.graphmlApi.enabled .Values.graphwalkerSvc.host }}
+    -
+      host: {{ .Values.graphwalkerSvc.host | quote }}
+      http:
+        paths:
+          - path: /paths
+            pathType: Prefix
+            backend:
+              service:
+                name: graphwalker-svc
+                port:
+                  number: 80
+          - path: /models
+            pathType: Prefix
+            backend:
+              service:
+                name: graphwalker-svc
+                port:
+                  number: 80
+          - path: /graphwalker-svc/actuator
+            pathType: Prefix
+            backend:
+              service:
+                name: graphwalker-svc
+                port:
+                  number: 80
+    {{- end }}

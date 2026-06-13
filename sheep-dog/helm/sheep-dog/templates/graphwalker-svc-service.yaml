@@ -1,0 +1,17 @@
+{{- if .Values.graphmlApi.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphwalker-svc
+  labels:
+    app: sheep-dog
+    component: graphwalker-svc
+spec:
+  selector:
+    component: graphwalker-svc
+  ports:
+    - name: graphwalker-svc
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
+{{- end }}

@@ -24,6 +24,10 @@ images:
     repository: nexus-docker.sheepdog.io/sheep-dog-mcp-svc
     tag: "1.28"
     pullPolicy: Always
+  graphwalkerSvc:
+    repository: nexus-docker.sheepdog.io/graphwalker-svc
+    tag: "1.0-SNAPSHOT"
+    pullPolicy: Always
 
 # Ingress host for the sheep-dog ingress.
 # Set on dev/qa (local minikube with hosts file entries). Leave empty on prod
@@ -44,8 +48,10 @@ pvcStorageClass: standard
 #   graphmlApi / asciidocApi  -> (amq + repo, both derived below)
 #   cucumberGen               -> asciidocApi (+ amq + repo)
 #   mcp                       -> asciidocApi + cucumberGen (+ amq; mcp needs no repo)
-# amq and the shared repo PVC are NOT toggled directly: they render iff any of
-# their consumers (asciidocApi/cucumberGen/graphmlApi) is enabled.
+#   graphmlApi                -> graphwalker-svc (graphml-to-graphwalker, #475)
+# amq, graphwalker-svc, and the shared repo PVC are NOT toggled directly: amq + repo
+# render iff any of asciidocApi/cucumberGen/graphmlApi is enabled; graphwalker-svc
+# renders iff graphmlApi is enabled (its only consumer).
 
 # PVC sizes + enable flag per component
 asciidocApi:
@@ -59,6 +65,17 @@ graphmlApi:
   pvcSize: 1Gi
 mcp:
   enabled: true
+# GraphWalker path/model service (sheep-dog-main#475). Co-deployed with graphml-api
+# (its only consumer) the way amq is co-deployed, so graphml-to-graphwalker reaches it
+# in-cluster at http://graphwalker-svc:80 instead of the api.graphwalker.io ingress.
+# The GitHub token Secret is created out-of-band (kubectl create secret generic
+# graphwalker-github --from-literal=token=<PAT>); only the name/key live in git.
+graphwalkerSvc:
+  githubSecretName: graphwalker-github
+  githubSecretKey: token
+  # Ingress host for graphwalker-svc, so the failsafe (outside the cluster) can reach the bundled
+  # service for its /paths assertion. Rendered iff graphmlApi.enabled and this host is set.
+  host: api.graphwalker.io
 # Shared repo volume mounted by both asciidoc-api-svc and cucumber-gen-svc
 # at /repo. Bridges the cross-service file-store dependency previously served
 # by the shared MySQL DB (#388). RWO works on single-node minikube because

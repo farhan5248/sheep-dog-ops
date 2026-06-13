@@ -37,6 +37,10 @@ spec:
               value: artemis
             - name: SPRING_ARTEMIS_PASSWORD
               value: artemis
+            # graphwalker-svc is co-deployed in this namespace (rendered iff graphmlApi.enabled),
+            # so reach it in-cluster rather than via the api.graphwalker.io ingress (#475/#486).
+            - name: GRAPHWALKER_SVC_URL
+              value: http://graphwalker-svc:80
           ports:
             - containerPort: 8080
           livenessProbe:
