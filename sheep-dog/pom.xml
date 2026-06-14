@@ -26,6 +26,7 @@
              properties and writes them into values.yaml via imageTagMap. -->
         <sheep-dog-asciidoc-api-svc.version>1.34</sheep-dog-asciidoc-api-svc.version>
         <sheep-dog-cucumber-gen-svc.version>1.32</sheep-dog-cucumber-gen-svc.version>
+        <sheep-dog-graphml-api-svc.version>1.2</sheep-dog-graphml-api-svc.version>
         <sheep-dog-mcp-svc.version>1.30</sheep-dog-mcp-svc.version>
     </properties>
 
@@ -82,6 +83,12 @@
         </dependency>
         <dependency>
             <groupId>org.farhan</groupId>
+            <artifactId>sheep-dog-graphml-api-svc</artifactId>
+            <version>${sheep-dog-graphml-api-svc.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>org.farhan</groupId>
             <artifactId>sheep-dog-mcp-svc</artifactId>
             <version>${sheep-dog-mcp-svc.version}</version>
             <type>pom</type>
@@ -112,6 +119,7 @@
                     <imageTagMap>
                         <sheep-dog-asciidoc-api-svc.version>asciidocApi</sheep-dog-asciidoc-api-svc.version>
                         <sheep-dog-cucumber-gen-svc.version>cucumberGen</sheep-dog-cucumber-gen-svc.version>
+                        <sheep-dog-graphml-api-svc.version>graphmlApi</sheep-dog-graphml-api-svc.version>
                         <sheep-dog-mcp-svc.version>mcp</sheep-dog-mcp-svc.version>
                     </imageTagMap>
                     <valuesYamlPath>helm/sheep-dog/values.yaml</valuesYamlPath>
