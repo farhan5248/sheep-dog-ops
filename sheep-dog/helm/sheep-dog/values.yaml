@@ -73,9 +73,6 @@ mcp:
 graphwalkerSvc:
   githubSecretName: graphwalker-github
   githubSecretKey: token
-  # Ingress host for graphwalker-svc, so the failsafe (outside the cluster) can reach the bundled
-  # service for its /paths assertion. Rendered iff graphmlApi.enabled and this host is set.
-  host: api.graphwalker.io
 # Shared repo volume mounted by both asciidoc-api-svc and cucumber-gen-svc
 # at /repo. Bridges the cross-service file-store dependency previously served
 # by the shared MySQL DB (#388). RWO works on single-node minikube because
