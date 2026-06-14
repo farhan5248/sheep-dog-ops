@@ -13,10 +13,13 @@ images:
     tag: "1.0-SNAPSHOT"
     pullPolicy: Always
 
-# GraphWalker Studio web model editor. Stateless, served on its own host.
-# Ingress rule renders only when both enabled and host are set.
+# GraphWalker Studio web model editor. Retired from the cluster — Studio runs
+# locally on demand via the graphwalker repo's scripts/run-studio-local.sh, so it
+# no longer needs to run permanently in this namespace (sheep-dog-main#494).
+# Disabled here removes the ui Deployment, Service, and its ingress route; flip
+# back to true to serve it over the LAN again. host is kept for that case.
 graphwalkerUi:
-  enabled: true
+  enabled: false
   host: studio.graphwalker.io
 
 # Path-generation REST service (sheep-dog-main#462). Synchronous REST over
