@@ -213,9 +213,10 @@ public class ReleaseMojo extends AbstractMojo {
 	}
 
 	// Component-wise numeric comparison after stripping -SNAPSHOT. Returns
-	// true only when newV is strictly greater than oldV. Non-numeric parts
-	// compare as 0, which is safe: unrecognized version schemes won't be
-	// treated as upgrades and won't trigger a spurious release.
+	// true when newV is strictly greater than oldV, or when a pinned
+	// X-SNAPSHOT has become its own release X. Non-numeric parts compare as 0,
+	// which is safe: unrecognized version schemes won't be treated as upgrades
+	// and won't trigger a spurious release.
 	protected boolean isUpgrade(String oldV, String newV) {
 		String[] oldParts = oldV.replace("-SNAPSHOT", "").split("\\.");
 		String[] newParts = newV.replace("-SNAPSHOT", "").split("\\.");
@@ -230,7 +231,16 @@ public class ReleaseMojo extends AbstractMojo {
 				return false;
 			}
 		}
-		return false;
+		// Numerically equal after stripping -SNAPSHOT. Treat as an upgrade only
+		// when the snapshot we were developing against is now published as its
+		// own release (X-SNAPSHOT -> X). A dependency-only fix that ships in
+		// release X otherwise never triggers a downstream re-release because the
+		// consumer is pinned at X-SNAPSHOT. X -> X (no change) and
+		// X-SNAPSHOT -> X-SNAPSHOT (no upstream release yet) stay non-upgrades,
+		// and X -> X-SNAPSHOT (release back to snapshot) must NOT count or the
+		// post-release re-bump self-perpetuates a release loop. See #495 (and
+		// the loop guards #240/#338 this must not regress).
+		return oldV.endsWith("-SNAPSHOT") && !newV.endsWith("-SNAPSHOT");
 	}
 
 	private int parseIntSafe(String s) {
