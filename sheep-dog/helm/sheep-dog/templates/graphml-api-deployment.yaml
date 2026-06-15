@@ -41,6 +41,16 @@ spec:
             # so reach it in-cluster rather than via the api.graphwalker.io ingress (#475/#486).
             - name: GRAPHWALKER_SVC_URL
               value: http://graphwalker-svc:80
+            {{- if .Values.graphmlApi.githubSecretName }}
+            # GitHub token for pushing the graphml model to the private specs repo
+            # (sheep-dog-main#503). The Secret is created out-of-band on the cluster
+            # (the same graphwalker-github Secret graphwalker-svc uses) — never in git.
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.graphmlApi.githubSecretName }}
+                  key: {{ .Values.graphmlApi.githubSecretKey | default "token" }}
+            {{- end }}
           ports:
             - containerPort: 8080
           livenessProbe:

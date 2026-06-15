@@ -63,6 +63,10 @@ cucumberGen:
 graphmlApi:
   enabled: true
   pvcSize: 1Gi
+  # graphml-api-svc pushes the graphml model to git (sheep-dog-main#503), reusing the
+  # same out-of-band GitHub token Secret as graphwalker-svc — only the name/key live here.
+  githubSecretName: graphwalker-github
+  githubSecretKey: token
 mcp:
   enabled: true
 # GraphWalker path/model service (sheep-dog-main#475). Co-deployed with graphml-api
