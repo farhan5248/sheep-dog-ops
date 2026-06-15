@@ -189,13 +189,34 @@ public class ReleaseMojo extends AbstractMojo {
 		if (!pomFile.exists()) {
 			return versions;
 		}
-		String content = readFile(pomFile);
+		// Scan only the top-level <properties> block. The same <name.version>
+		// element names are reused as tags inside the release plugin's
+		// <imageTagMap> config (property-name -> chart-key, e.g.
+		// <sheep-dog-graphml-api-svc.version>graphmlApi</...>), and that block
+		// follows <properties>. A document-wide scan with last-wins put() lets
+		// those chart-key values shadow the real versions, so before/after
+		// snapshots come out identical and every dependency-only release is
+		// silently skipped. See #500 (and #490, which introduced imageTagMap).
+		String content = propertiesBlock(readFile(pomFile));
 		Pattern p = Pattern.compile("<([\\w][\\w.-]*\\.version)>([^<]+)</\\1>");
 		Matcher m = p.matcher(content);
 		while (m.find()) {
 			versions.put(m.group(1), m.group(2).trim());
 		}
 		return versions;
+	}
+
+	// Returns the substring spanning the first top-level <properties>...</properties>
+	// element, or the whole content if no such block exists. Keeps version-property
+	// extraction from straying into other blocks (e.g. <imageTagMap>) that reuse the
+	// same element names. See #500.
+	protected String propertiesBlock(String content) {
+		int start = content.indexOf("<properties>");
+		int end = content.indexOf("</properties>");
+		if (start < 0 || end < 0 || end < start) {
+			return content;
+		}
+		return content.substring(start, end);
 	}
 
 	private boolean hasUpgradedDependencies(Map<String, String> before, Map<String, String> after) {

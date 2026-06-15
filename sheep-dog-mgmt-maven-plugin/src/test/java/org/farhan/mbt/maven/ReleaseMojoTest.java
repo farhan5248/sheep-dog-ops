@@ -1,9 +1,16 @@
 package org.farhan.mbt.maven;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class ReleaseMojoTest {
 
@@ -46,5 +53,32 @@ class ReleaseMojoTest {
 	void releaseBackToSnapshotIsNotAnUpgrade() {
 		assertFalse(mojo.isUpgrade("1.5", "1.5-SNAPSHOT"));
 		assertFalse(mojo.isUpgrade("1.5-SNAPSHOT", "1.5-SNAPSHOT"));
+	}
+
+	// The #500 fix: the umbrella chart pom reuses the .version property names as
+	// tags inside the release plugin's <imageTagMap> config, after <properties>.
+	// extractVersionProperties must read the real versions from <properties>, not
+	// the chart-key values from imageTagMap (which would shadow them via last-wins
+	// put and make every dependency-only release skip).
+	@Test
+	void extractVersionPropertiesIgnoresImageTagMapCollision(@TempDir File dir) throws Exception {
+		File pom = new File(dir, "pom.xml");
+		Files.write(pom.toPath(), ("<project>\n"
+				+ "  <properties>\n"
+				+ "    <sheep-dog-graphml-api-svc.version>1.5</sheep-dog-graphml-api-svc.version>\n"
+				+ "    <sheep-dog-mcp-svc.version>1.31</sheep-dog-mcp-svc.version>\n"
+				+ "  </properties>\n"
+				+ "  <build><plugins><plugin><configuration>\n"
+				+ "    <imageTagMap>\n"
+				+ "      <sheep-dog-graphml-api-svc.version>graphmlApi</sheep-dog-graphml-api-svc.version>\n"
+				+ "      <sheep-dog-mcp-svc.version>mcp</sheep-dog-mcp-svc.version>\n"
+				+ "    </imageTagMap>\n"
+				+ "  </configuration></plugin></plugins></build>\n"
+				+ "</project>\n").getBytes(StandardCharsets.UTF_8));
+
+		Map<String, String> versions = mojo.extractVersionProperties(pom);
+
+		assertEquals("1.5", versions.get("sheep-dog-graphml-api-svc.version"));
+		assertEquals("1.31", versions.get("sheep-dog-mcp-svc.version"));
 	}
 }
