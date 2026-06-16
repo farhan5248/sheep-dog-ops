@@ -26,7 +26,7 @@ images:
     pullPolicy: Always
   graphwalkerSvc:
     repository: nexus-docker.sheepdog.io/sheep-dog-gw-svc
-    tag: "1.1"
+    tag: "1.2"
     pullPolicy: Always
 
 # Ingress host for the sheep-dog ingress.
