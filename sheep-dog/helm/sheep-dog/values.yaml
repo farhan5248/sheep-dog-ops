@@ -10,15 +10,15 @@ images:
     pullPolicy: IfNotPresent
   asciidocApi:
     repository: nexus-docker.sheepdog.io/sheep-dog-asciidoc-api-svc
-    tag: "1.36"
+    tag: "1.37"
     pullPolicy: Always
   cucumberGen:
     repository: nexus-docker.sheepdog.io/sheep-dog-cucumber-gen-svc
-    tag: "1.34"
+    tag: "1.35"
     pullPolicy: Always
   graphmlApi:
     repository: nexus-docker.sheepdog.io/sheep-dog-graphml-api-svc
-    tag: "1.7"
+    tag: "1.8"
     pullPolicy: Always
   mcp:
     repository: nexus-docker.sheepdog.io/sheep-dog-mcp-svc
@@ -26,7 +26,7 @@ images:
     pullPolicy: Always
   graphwalkerSvc:
     repository: nexus-docker.sheepdog.io/sheep-dog-gw-svc
-    tag: "1.0-SNAPSHOT"
+    tag: "1.0"
     pullPolicy: Always
 
 # Ingress host for the sheep-dog ingress.
