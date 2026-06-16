@@ -25,7 +25,7 @@ images:
     tag: "1.31"
     pullPolicy: Always
   graphwalkerSvc:
-    repository: nexus-docker.sheepdog.io/graphwalker-svc
+    repository: nexus-docker.sheepdog.io/sheep-dog-gw-svc
     tag: "1.0-SNAPSHOT"
     pullPolicy: Always
 
@@ -48,10 +48,11 @@ pvcStorageClass: standard
 #   graphmlApi / asciidocApi  -> (amq + repo, both derived below)
 #   cucumberGen               -> asciidocApi (+ amq + repo)
 #   mcp                       -> asciidocApi + cucumberGen (+ amq; mcp needs no repo)
-#   graphmlApi                -> graphwalker-svc (graphml-to-graphwalker, #475)
-# amq, graphwalker-svc, and the shared repo PVC are NOT toggled directly: amq + repo
-# render iff any of asciidocApi/cucumberGen/graphmlApi is enabled; graphwalker-svc
-# renders iff graphmlApi is enabled (its only consumer).
+#   graphmlApi                -> graphwalkerSvc (graphml-to-graphwalker, #475)
+# amq and the shared repo PVC are NOT toggled directly: they render iff any of
+# asciidocApi/cucumberGen/graphmlApi is enabled. sheep-dog-gw-svc has its own
+# graphwalkerSvc.enabled flag (its own failsafe deploys just itself) but ALSO
+# renders whenever graphmlApi is enabled, since graphml-to-graphwalker consumes it.
 
 # PVC sizes + enable flag per component
 asciidocApi:
@@ -64,17 +65,20 @@ graphmlApi:
   enabled: true
   pvcSize: 1Gi
   # graphml-api-svc pushes the graphml model to git (sheep-dog-main#503), reusing the
-  # same out-of-band GitHub token Secret as graphwalker-svc — only the name/key live here.
+  # same out-of-band GitHub token Secret as sheep-dog-gw-svc — only the name/key live here.
   githubSecretName: graphwalker-github
   githubSecretKey: token
 mcp:
   enabled: true
-# GraphWalker path/model service (sheep-dog-main#475). Co-deployed with graphml-api
-# (its only consumer) the way amq is co-deployed, so graphml-to-graphwalker reaches it
-# in-cluster at http://graphwalker-svc:80 instead of the api.graphwalker.io ingress.
-# The GitHub token Secret is created out-of-band (kubectl create secret generic
-# graphwalker-github --from-literal=token=<PAT>); only the name/key live in git.
+# Permanent GraphWalker path/model wrapper service (sheep-dog-main#462/#502).
+# Migrated into the sheep-dog ecosystem from the standalone graphwalker namespace.
+# graphml-to-graphwalker reaches it in-cluster at http://sheep-dog-gw-svc:80; the
+# d3.js viewer (#497) and the gw-svc failsafe ITs reach it via the sheep-dog
+# ingress (/paths, /models). The GitHub token Secret is created out-of-band
+# (kubectl create secret generic graphwalker-github --from-literal=token=<PAT>);
+# only the name/key live in git.
 graphwalkerSvc:
+  enabled: true
   githubSecretName: graphwalker-github
   githubSecretKey: token
 # Shared repo volume mounted by both asciidoc-api-svc and cucumber-gen-svc

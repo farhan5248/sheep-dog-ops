@@ -1,23 +1,23 @@
-{{- if .Values.graphmlApi.enabled }}
+{{- if or .Values.graphwalkerSvc.enabled .Values.graphmlApi.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: graphwalker-svc
+  name: sheep-dog-gw-svc
   labels:
     app: sheep-dog
-    component: graphwalker-svc
+    component: sheep-dog-gw-svc
 spec:
   selector:
     matchLabels:
-      component: graphwalker-svc
+      component: sheep-dog-gw-svc
   template:
     metadata:
       labels:
         app: sheep-dog
-        component: graphwalker-svc
+        component: sheep-dog-gw-svc
     spec:
       containers:
-        - name: graphwalker-svc
+        - name: sheep-dog-gw-svc
           image: "{{ .Values.images.graphwalkerSvc.repository }}:{{ .Values.images.graphwalkerSvc.tag }}"
           imagePullPolicy: {{ .Values.images.graphwalkerSvc.pullPolicy | quote }}
           env:
@@ -37,7 +37,7 @@ spec:
             - containerPort: 8080
           livenessProbe:
             httpGet:
-              path: /graphwalker-svc/actuator/health
+              path: /sheep-dog-gw-svc/actuator/health
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
@@ -45,7 +45,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /graphwalker-svc/actuator/health
+              path: /sheep-dog-gw-svc/actuator/health
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
