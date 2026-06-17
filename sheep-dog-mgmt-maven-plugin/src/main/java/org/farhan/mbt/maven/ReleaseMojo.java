@@ -172,8 +172,15 @@ public class ReleaseMojo extends AbstractMojo {
 			runOrFail(git, workingDir, "clean", "-fdx");
 			commitDependencyChangesIfAny(git, workingDir, pomFile, versionsBefore);
 
-			// Publish the SNAPSHOT so downstream projects can resolve the latest
-			runOrFail(mvn, workingDir, "clean", "deploy", "-DskipTests");
+			// Publish the SNAPSHOT so downstream projects can resolve the latest.
+			// Reuse the caller's preparationGoals (prefixed with clean) instead of
+			// a hardcoded "clean deploy -DskipTests" so per-project flags like
+			// -Dhelm.deploy.skip=true propagate here too. Without this, the
+			// snapshot-bump publish runs the failsafe/scale execs against a stack
+			// it never deployed and dies on scale-down with "no objects passed to
+			// scale". Default callers (preparationGoals=deploy,-DskipTests) keep
+			// identical behavior. See #516.
+			mvnPhase(mvn, workingDir, "clean," + preparationGoals);
 
 		} catch (Exception e) {
 			throw new MojoExecutionException(e);

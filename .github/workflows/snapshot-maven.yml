@@ -15,15 +15,23 @@ on:
         type: choice
         options:
           - darmok-maven-plugin
+          - sheep-dog
           - sheep-dog-asciidoc-api
+          - sheep-dog-asciidoc-api-svc
           - sheep-dog-cucumber-gen
+          - sheep-dog-cucumber-gen-svc
+          - sheep-dog-graph-plugin
+          - sheep-dog-graphml-api
+          - sheep-dog-graphml-api-svc
           - sheep-dog-grammar
+          - sheep-dog-gw-svc
+          - sheep-dog-mcp-svc
           - sheep-dog-mgmt-maven-plugin
           - sheep-dog-svc-maven-plugin
+          - sheep-dog-vscode-plugin
           - sheepdogasciidoc.parent
           - sheepdogcucumber.parent
           - sheepdogeclipseplugin.parent
-          - sheep-dog-vscode-plugin
 jobs:
   build:
     runs-on: [farhan5248-runners]
@@ -31,7 +39,8 @@ jobs:
       contents: read
       packages: write
     steps:
-    - uses: actions/checkout@v5
+    - name: Checkout
+      uses: actions/checkout@v5
     - name: Set up JDK 21
       run: echo "JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64" >> $GITHUB_ENV
     - name: Helm registry login (Nexus OCI)
@@ -50,6 +59,7 @@ jobs:
     - name: Run Maven
       working-directory: ./${{ inputs.project }}
       run: |
-        mvn -U deploy
+        mvn -U deploy "-Dsheepdog.namespace=int"
       env:
         GITHUB_TOKEN: ${{ github.token }}
+        SHEEP_DOG_SPECS_TOKEN: ${{ secrets.SHEEP_DOG_SPECS_TOKEN }}
