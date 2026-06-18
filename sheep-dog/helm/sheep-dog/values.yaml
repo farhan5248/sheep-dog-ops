@@ -14,19 +14,19 @@ images:
     pullPolicy: Always
   cucumberGen:
     repository: nexus-docker.sheepdog.io/sheep-dog-cucumber-gen-svc
-    tag: "1.37"
+    tag: "1.38"
     pullPolicy: Always
   graphmlApi:
     repository: nexus-docker.sheepdog.io/sheep-dog-graphml-api-svc
-    tag: "1.11"
+    tag: "1.12"
     pullPolicy: Always
   mcp:
     repository: nexus-docker.sheepdog.io/sheep-dog-mcp-svc
-    tag: "1.31"
+    tag: "1.32"
     pullPolicy: Always
   graphwalkerSvc:
     repository: nexus-docker.sheepdog.io/sheep-dog-gw-svc
-    tag: "1.4"
+    tag: "1.5"
     pullPolicy: Always
 
 # Ingress host for the sheep-dog ingress.
