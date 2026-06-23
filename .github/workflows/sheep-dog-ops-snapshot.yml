@@ -8,6 +8,7 @@ on:
       - '.github/**'
       - '**/docker/**'
       - '**/src/**'
+      - '**/src-gen/**'
       - '**/pom.xml'
 concurrency:
   group: sheep-dog-ops
