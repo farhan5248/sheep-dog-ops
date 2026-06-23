@@ -18,7 +18,7 @@ images:
     pullPolicy: Always
   graphmlApi:
     repository: nexus-docker.sheepdog.io/sheep-dog-graphml-api-svc
-    tag: "1.21"
+    tag: "1.22"
     pullPolicy: Always
   mcp:
     repository: nexus-docker.sheepdog.io/sheep-dog-mcp-svc
@@ -26,7 +26,7 @@ images:
     pullPolicy: Always
   graphwalkerSvc:
     repository: nexus-docker.sheepdog.io/sheep-dog-gw-svc
-    tag: "1.14"
+    tag: "1.15"
     pullPolicy: Always
 
 # Ingress host for the sheep-dog ingress.
