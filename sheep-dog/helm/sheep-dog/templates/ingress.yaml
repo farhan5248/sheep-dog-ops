@@ -95,7 +95,7 @@ spec:
                 name: sheep-dog-gw-svc
                 port:
                   number: 80
-          - path: /sheep-dog-gw-svc/actuator
+          - path: /sheep-dog-mbt-svc/actuator
             pathType: Prefix
             backend:
               service:
