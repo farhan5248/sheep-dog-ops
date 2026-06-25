@@ -49,4 +49,10 @@ bash "$SCRIPT_DIR/teardown-namespace.sh" "$ENV_NAME"
 echo "--- Teardown cluster (eks) ---"
 bash "$EKS_DIR/teardown-cluster.sh" "$ENV_NAME"
 
+# Per #522: the ghcr.io images only exist to be pulled during this EKS
+# deploy+smoke-test. Once teardown is done, prune every version so nothing
+# lingers in (paid) GitHub Packages storage.
+echo "--- Prune ghcr.io packages ---"
+bash "$SCRIPT_DIR/prune-ghcr-packages.sh" --keep 0
+
 echo "Full deploy completed successfully!"
