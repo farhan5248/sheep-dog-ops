@@ -18,7 +18,7 @@ images:
     pullPolicy: Always
   graphmlApi:
     repository: nexus-docker.sheepdog.io/sheep-dog-graphml-api-svc
-    tag: "1.23"
+    tag: "1.24"
     pullPolicy: Always
   mcp:
     repository: nexus-docker.sheepdog.io/sheep-dog-mcp-svc
