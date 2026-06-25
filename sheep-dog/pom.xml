@@ -27,7 +27,7 @@
         <sheep-dog-asciidoc-api-svc.version>1.39-SNAPSHOT</sheep-dog-asciidoc-api-svc.version>
         <sheep-dog-cucumber-gen-svc.version>1.41-SNAPSHOT</sheep-dog-cucumber-gen-svc.version>
         <sheep-dog-graphml-api-svc.version>1.24-SNAPSHOT</sheep-dog-graphml-api-svc.version>
-        <sheep-dog-gw-svc.version>1.17-SNAPSHOT</sheep-dog-gw-svc.version>
+        <sheep-dog-mbt-svc.version>1.17-SNAPSHOT</sheep-dog-mbt-svc.version>
         <sheep-dog-mcp-svc.version>1.35-SNAPSHOT</sheep-dog-mcp-svc.version>
     </properties>
 
@@ -90,8 +90,8 @@
         </dependency>
         <dependency>
             <groupId>org.farhan</groupId>
-            <artifactId>sheep-dog-gw-svc</artifactId>
-            <version>${sheep-dog-gw-svc.version}</version>
+            <artifactId>sheep-dog-mbt-svc</artifactId>
+            <version>${sheep-dog-mbt-svc.version}</version>
             <type>pom</type>
         </dependency>
         <dependency>
@@ -127,7 +127,7 @@
                         <sheep-dog-asciidoc-api-svc.version>asciidocApi</sheep-dog-asciidoc-api-svc.version>
                         <sheep-dog-cucumber-gen-svc.version>cucumberGen</sheep-dog-cucumber-gen-svc.version>
                         <sheep-dog-graphml-api-svc.version>graphmlApi</sheep-dog-graphml-api-svc.version>
-                        <sheep-dog-gw-svc.version>graphwalkerSvc</sheep-dog-gw-svc.version>
+                        <sheep-dog-mbt-svc.version>mbtSvc</sheep-dog-mbt-svc.version>
                         <sheep-dog-mcp-svc.version>mcp</sheep-dog-mcp-svc.version>
                     </imageTagMap>
                     <valuesYamlPath>helm/sheep-dog/values.yaml</valuesYamlPath>
