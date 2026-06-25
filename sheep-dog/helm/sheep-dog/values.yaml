@@ -24,11 +24,9 @@ images:
     repository: nexus-docker.sheepdog.io/sheep-dog-mcp-svc
     tag: "1.34"
     pullPolicy: Always
-  graphwalkerSvc:
-    # Renamed gw-svc -> mbt-svc image (#534). Hardcoded to the SNAPSHOT until a release
-    # version of sheep-dog-mbt-svc is published, then this flips back to a release tag.
+  mbtSvc:
     repository: nexus-docker.sheepdog.io/sheep-dog-mbt-svc
-    tag: "1.17-SNAPSHOT"
+    tag: "1.17"
     pullPolicy: Always
 
 # Ingress host for the sheep-dog ingress.
@@ -50,11 +48,11 @@ pvcStorageClass: standard
 #   graphmlApi / asciidocApi  -> (amq + repo, both derived below)
 #   cucumberGen               -> asciidocApi (+ amq + repo)
 #   mcp                       -> asciidocApi + cucumberGen (+ amq; mcp needs no repo)
-#   graphmlApi                -> graphwalkerSvc (graphml-to-graphwalker, #475)
+#   graphmlApi                -> mbtSvc (graphml-to-graphwalker, #475)
 # amq and the shared repo PVC are NOT toggled directly: they render iff any of
-# asciidocApi/cucumberGen/graphmlApi is enabled. sheep-dog-gw-svc has its own
-# graphwalkerSvc.enabled flag (its own failsafe deploys just itself) but ALSO
-# renders whenever graphmlApi is enabled, since graphml-to-graphwalker consumes it.
+# asciidocApi/cucumberGen/graphmlApi is enabled. sheep-dog-mbt-svc has its own
+# mbtSvc.enabled flag (its own failsafe deploys just itself) but ALSO renders
+# whenever graphmlApi is enabled, since graphml-to-graphwalker consumes it.
 
 # PVC sizes + enable flag per component
 asciidocApi:
@@ -66,23 +64,19 @@ cucumberGen:
 graphmlApi:
   enabled: true
   pvcSize: 1Gi
-  # graphml-api-svc pushes the graphml model to git (sheep-dog-main#503), reusing the
-  # same out-of-band GitHub token Secret as sheep-dog-gw-svc — only the name/key live here.
+  # graphml-api-svc pushes the graphml model to git (sheep-dog-main#503), via an
+  # out-of-band GitHub token Secret — only the name/key live here.
   githubSecretName: graphwalker-github
   githubSecretKey: token
 mcp:
   enabled: true
-# Permanent GraphWalker path/model wrapper service (sheep-dog-main#462/#502).
-# Migrated into the sheep-dog ecosystem from the standalone graphwalker namespace.
-# graphml-to-graphwalker reaches it in-cluster at http://sheep-dog-gw-svc:80; the
-# d3.js viewer (#497) and the gw-svc failsafe ITs reach it via the sheep-dog
-# ingress (/paths, /models). The GitHub token Secret is created out-of-band
-# (kubectl create secret generic graphwalker-github --from-literal=token=<PAT>);
-# only the name/key live in git.
-graphwalkerSvc:
+# Permanent MBT path/model wrapper service (sheep-dog-main#462/#502/#534).
+# graphml-to-graphwalker reaches it in-cluster at http://sheep-dog-mbt-svc:80; the
+# d3.js viewer (#497) and the mbt-svc failsafe ITs reach it via the sheep-dog
+# ingress (/paths, /models). No git token any more — the model lives only in the
+# service's memory (#534).
+mbtSvc:
   enabled: true
-  githubSecretName: graphwalker-github
-  githubSecretKey: token
 # Shared repo volume mounted by both asciidoc-api-svc and cucumber-gen-svc
 # at /repo. Bridges the cross-service file-store dependency previously served
 # by the shared MySQL DB (#388). RWO works on single-node minikube because

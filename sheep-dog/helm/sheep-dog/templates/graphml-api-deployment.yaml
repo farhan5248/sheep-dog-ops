@@ -37,14 +37,14 @@ spec:
               value: artemis
             - name: SPRING_ARTEMIS_PASSWORD
               value: artemis
-            # sheep-dog-gw-svc is co-deployed in this namespace (rendered iff graphmlApi.enabled),
-            # so reach it in-cluster rather than via the sheep-dog ingress (#475/#486/#502).
-            - name: GRAPHWALKER_SVC_URL
-              value: http://sheep-dog-gw-svc:80
+            # sheep-dog-mbt-svc is co-deployed in this namespace (rendered iff graphmlApi.enabled),
+            # so reach it in-cluster rather than via the sheep-dog ingress (#475/#486/#502/#534).
+            - name: MBT_SVC_URL
+              value: http://sheep-dog-mbt-svc:80
             {{- if .Values.graphmlApi.githubSecretName }}
             # GitHub token for pushing the graphml model to the private specs repo
             # (sheep-dog-main#503). The Secret is created out-of-band on the cluster
-            # (the same graphwalker-github Secret sheep-dog-gw-svc uses) — never in git.
+            # (the graphwalker-github Secret) — never in git.
             - name: GITHUB_TOKEN
               valueFrom:
                 secretKeyRef:

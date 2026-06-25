@@ -1,11 +1,9 @@
-{{- if or .Values.graphwalkerSvc.enabled .Values.graphmlApi.enabled }}
+{{- if or .Values.mbtSvc.enabled .Values.graphmlApi.enabled }}
 apiVersion: v1
 kind: Service
-# Kept the in-cluster DNS name sheep-dog-gw-svc so graphml-api-svc's GRAPHWALKER_SVC_URL
-# (http://sheep-dog-gw-svc:80) still resolves; the selector targets the renamed mbt-svc
-# deployment (#534). The service-name rename is deferred with the chart-key rename.
+# In-cluster DNS name graphml-api-svc reaches at http://sheep-dog-mbt-svc:80 (#534).
 metadata:
-  name: sheep-dog-gw-svc
+  name: sheep-dog-mbt-svc
   labels:
     app: sheep-dog
     component: sheep-dog-mbt-svc

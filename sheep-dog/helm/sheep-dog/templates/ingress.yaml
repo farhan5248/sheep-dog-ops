@@ -77,29 +77,29 @@ spec:
                 port:
                   number: 80
           {{- end }}
-          {{- if or .Values.graphwalkerSvc.enabled .Values.graphmlApi.enabled }}
+          {{- if or .Values.mbtSvc.enabled .Values.graphmlApi.enabled }}
           # Permanent path-generation wrapper (sheep-dog-main#462/#502). The
           # d3.js viewer (#497) and the failsafe ITs reach it here; graphml-api
-          # reaches it in-cluster at http://sheep-dog-gw-svc:80.
+          # reaches it in-cluster at http://sheep-dog-mbt-svc:80.
           - path: /paths
             pathType: Prefix
             backend:
               service:
-                name: sheep-dog-gw-svc
+                name: sheep-dog-mbt-svc
                 port:
                   number: 80
           - path: /models
             pathType: Prefix
             backend:
               service:
-                name: sheep-dog-gw-svc
+                name: sheep-dog-mbt-svc
                 port:
                   number: 80
           - path: /sheep-dog-mbt-svc/actuator
             pathType: Prefix
             backend:
               service:
-                name: sheep-dog-gw-svc
+                name: sheep-dog-mbt-svc
                 port:
                   number: 80
           {{- end }}

@@ -1,4 +1,4 @@
-{{- if or .Values.graphwalkerSvc.enabled .Values.graphmlApi.enabled }}
+{{- if or .Values.mbtSvc.enabled .Values.graphmlApi.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -18,8 +18,8 @@ spec:
     spec:
       containers:
         - name: sheep-dog-mbt-svc
-          image: "{{ .Values.images.graphwalkerSvc.repository }}:{{ .Values.images.graphwalkerSvc.tag }}"
-          imagePullPolicy: {{ .Values.images.graphwalkerSvc.pullPolicy | quote }}
+          image: "{{ .Values.images.mbtSvc.repository }}:{{ .Values.images.mbtSvc.tag }}"
+          imagePullPolicy: {{ .Values.images.mbtSvc.pullPolicy | quote }}
           env:
             - name: JAVA_OPTS
               value: "-Xmx512m -Xms256m"
