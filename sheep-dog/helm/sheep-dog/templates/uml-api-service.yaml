@@ -1,0 +1,17 @@
+{{- if .Values.umlApi.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: sheep-dog-uml-api-svc
+  labels:
+    app: sheep-dog
+    component: sheep-dog-uml-api-svc
+spec:
+  selector:
+    component: sheep-dog-uml-api-svc
+  ports:
+    - name: sheep-dog-uml-api-svc
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
+{{- end }}

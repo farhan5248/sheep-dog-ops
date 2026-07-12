@@ -38,7 +38,7 @@ spec:
             - name: SPRING_ARTEMIS_PASSWORD
               value: artemis
             - name: SHEEPDOG_HOST
-              value: sheep-dog-asciidoc-api-svc
+              value: sheep-dog-uml-api-svc
             - name: SHEEPDOG_PORT
               value: "80"
           ports:

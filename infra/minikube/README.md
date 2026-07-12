@@ -54,8 +54,8 @@ kubectl --context=minikube-team get deploy,sts -n qa
 ```
 
 ```
-kubectl --context=minikube-team -n qa rollout restart deployment/sheep-dog-asciidoc-api-svc
-kubectl --context=minikube-team -n qa rollout status deployment/sheep-dog-asciidoc-api-svc
+kubectl --context=minikube-team -n qa rollout restart deployment/sheep-dog-uml-api-svc
+kubectl --context=minikube-team -n qa rollout status deployment/sheep-dog-uml-api-svc
 ```
 
 ```

@@ -1,4 +1,4 @@
-{{- if or .Values.asciidocApi.enabled .Values.cucumberGen.enabled .Values.graphmlApi.enabled }}
+{{- if or .Values.umlApi.enabled .Values.cucumberGen.enabled .Values.graphmlApi.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:

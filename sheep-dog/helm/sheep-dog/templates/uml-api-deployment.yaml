@@ -1,25 +1,25 @@
-{{- if .Values.asciidocApi.enabled }}
+{{- if .Values.umlApi.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sheep-dog-asciidoc-api-svc
+  name: sheep-dog-uml-api-svc
   labels:
     app: sheep-dog
-    component: sheep-dog-asciidoc-api-svc
+    component: sheep-dog-uml-api-svc
 spec:
   selector:
     matchLabels:
-      component: sheep-dog-asciidoc-api-svc
+      component: sheep-dog-uml-api-svc
   template:
     metadata:
       labels:
         app: sheep-dog
-        component: sheep-dog-asciidoc-api-svc
+        component: sheep-dog-uml-api-svc
     spec:
       containers:
-        - name: sheep-dog-asciidoc-api-svc
-          image: "{{ .Values.images.asciidocApi.repository }}:{{ .Values.images.asciidocApi.tag }}"
-          imagePullPolicy: {{ .Values.images.asciidocApi.pullPolicy | quote }}
+        - name: sheep-dog-uml-api-svc
+          image: "{{ .Values.images.umlApi.repository }}:{{ .Values.images.umlApi.tag }}"
+          imagePullPolicy: {{ .Values.images.umlApi.pullPolicy | quote }}
           env:
             - name: JAVA_OPTS
               value: "-Xmx3g -Xms1g"
@@ -41,7 +41,7 @@ spec:
             - containerPort: 8080
           livenessProbe:
             httpGet:
-              path: /sheep-dog-asciidoc-api-svc/actuator/health
+              path: /sheep-dog-uml-api-svc/actuator/health
               port: 8080
             initialDelaySeconds: 120
             periodSeconds: 10
@@ -62,7 +62,7 @@ spec:
       volumes:
         - name: logs-volume
           persistentVolumeClaim:
-            claimName: sheep-dog-asciidoc-api-svc-pvc
+            claimName: sheep-dog-uml-api-svc-pvc
         - name: repo-volume
           persistentVolumeClaim:
             claimName: sheep-dog-repo-pvc

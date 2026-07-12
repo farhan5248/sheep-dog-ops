@@ -26,7 +26,7 @@ spec:
             - name: LOG_PATH
               value: "/logs"
             - name: SHEEPDOG_ASCIIDOC_HOST
-              value: sheep-dog-asciidoc-api-svc
+              value: sheep-dog-uml-api-svc
             - name: SHEEPDOG_ASCIIDOC_PORT
               value: "80"
             - name: SHEEPDOG_CUCUMBER_HOST

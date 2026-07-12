@@ -15,26 +15,26 @@ spec:
       {{- end }}
       http:
         paths:
-          {{- if .Values.asciidocApi.enabled }}
+          {{- if .Values.umlApi.enabled }}
           - path: /asciidoctor
             pathType: Prefix
             backend:
               service:
-                name: sheep-dog-asciidoc-api-svc
+                name: sheep-dog-uml-api-svc
                 port:
                   number: 80
           - path: /uml
             pathType: Prefix
             backend:
               service:
-                name: sheep-dog-asciidoc-api-svc
+                name: sheep-dog-uml-api-svc
                 port:
                   number: 80
-          - path: /sheep-dog-asciidoc-api-svc/actuator
+          - path: /sheep-dog-uml-api-svc/actuator
             pathType: Prefix
             backend:
               service:
-                name: sheep-dog-asciidoc-api-svc
+                name: sheep-dog-uml-api-svc
                 port:
                   number: 80
           {{- end }}

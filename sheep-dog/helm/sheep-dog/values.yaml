@@ -8,8 +8,8 @@ images:
     repository: apache/activemq-artemis
     tag: "2.41.0"
     pullPolicy: IfNotPresent
-  asciidocApi:
-    repository: nexus-docker.sheepdog.io/sheep-dog-asciidoc-api-svc
+  umlApi:
+    repository: nexus-docker.sheepdog.io/sheep-dog-uml-api-svc
     tag: "1.41"
     pullPolicy: Always
   cucumberGen:
@@ -36,7 +36,7 @@ images:
 ingress:
   host: ""
 
-# PVC storage class applied to all PVCs (asciidoc-api logs, cucumber-gen logs,
+# PVC storage class applied to all PVCs (uml-api logs, cucumber-gen logs,
 # shared repo). "standard" for minikube, "gp2" for AWS EKS.
 pvcStorageClass: standard
 
@@ -45,17 +45,17 @@ pvcStorageClass: standard
 # sandbox node). Defaults are all-on so existing deploys are unchanged.
 #
 # Dependency closure — enabling a service requires its deps to be enabled too:
-#   graphmlApi / asciidocApi  -> (amq + repo, both derived below)
-#   cucumberGen               -> asciidocApi (+ amq + repo)
-#   mcp                       -> asciidocApi + cucumberGen (+ amq; mcp needs no repo)
+#   graphmlApi / umlApi  -> (amq + repo, both derived below)
+#   cucumberGen               -> umlApi (+ amq + repo)
+#   mcp                       -> umlApi + cucumberGen (+ amq; mcp needs no repo)
 #   graphmlApi                -> mbtSvc (graphml-to-graphwalker, #475)
 # amq and the shared repo PVC are NOT toggled directly: they render iff any of
-# asciidocApi/cucumberGen/graphmlApi is enabled. sheep-dog-mbt-svc has its own
+# umlApi/cucumberGen/graphmlApi is enabled. sheep-dog-mbt-svc has its own
 # mbtSvc.enabled flag (its own failsafe deploys just itself) but ALSO renders
 # whenever graphmlApi is enabled, since graphml-to-graphwalker consumes it.
 
 # PVC sizes + enable flag per component
-asciidocApi:
+umlApi:
   enabled: true
   pvcSize: 1Gi
 cucumberGen:
@@ -77,7 +77,7 @@ mcp:
 # service's memory (#534).
 mbtSvc:
   enabled: true
-# Shared repo volume mounted by both asciidoc-api-svc and cucumber-gen-svc
+# Shared repo volume mounted by both uml-api-svc and cucumber-gen-svc
 # at /repo. Bridges the cross-service file-store dependency previously served
 # by the shared MySQL DB (#388). RWO works on single-node minikube because
 # both pods land on the same node; multi-node will need RWX.

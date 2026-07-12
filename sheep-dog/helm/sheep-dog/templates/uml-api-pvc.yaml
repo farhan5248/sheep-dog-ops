@@ -1,16 +1,16 @@
-{{- if .Values.asciidocApi.enabled }}
+{{- if .Values.umlApi.enabled }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: sheep-dog-asciidoc-api-svc-pvc
+  name: sheep-dog-uml-api-svc-pvc
   labels:
     app: sheep-dog
-    component: sheep-dog-asciidoc-api-svc
+    component: sheep-dog-uml-api-svc
 spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: {{ .Values.pvcStorageClass | quote }}
   resources:
     requests:
-      storage: {{ .Values.asciidocApi.pvcSize | quote }}
+      storage: {{ .Values.umlApi.pvcSize | quote }}
 {{- end }}

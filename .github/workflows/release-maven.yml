@@ -19,8 +19,8 @@ on:
         type: choice
         options:
           - darmok-maven-plugin
-          - sheep-dog-asciidoc-api
-          - sheep-dog-asciidoc-api-svc
+          - sheep-dog-uml-api
+          - sheep-dog-uml-api-svc
           - sheep-dog-cucumber-gen
           - sheep-dog-cucumber-gen-svc
           - sheep-dog-mcp-svc

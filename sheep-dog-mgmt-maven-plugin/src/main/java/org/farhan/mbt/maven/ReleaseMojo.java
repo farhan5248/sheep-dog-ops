@@ -36,7 +36,7 @@ public class ReleaseMojo extends AbstractMojo {
 	// sheep-dog umbrella chart pom to publish versioned image references
 	// alongside the chart release. Each map entry is
 	// <pom-property-name> -> <values.yaml-service-block-key>, e.g.
-	// asciidoc-api-svc.version -> asciidocApi. The pom property must
+	// uml-api-svc.version -> umlApi. The pom property must
 	// already be resolved to a concrete version (versions-maven-plugin
 	// runs before this mojo), and the values.yaml must have a matching
 	// block under `images:` with a `tag:` line to rewrite.

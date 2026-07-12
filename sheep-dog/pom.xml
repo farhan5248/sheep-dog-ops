@@ -24,7 +24,7 @@
              these to the latest releases in Nexus on `mvn ...:release`.
              sheep-dog-mgmt then reads the resolved values from project
              properties and writes them into values.yaml via imageTagMap. -->
-        <sheep-dog-asciidoc-api-svc.version>1.42-SNAPSHOT</sheep-dog-asciidoc-api-svc.version>
+        <sheep-dog-uml-api-svc.version>1.42-SNAPSHOT</sheep-dog-uml-api-svc.version>
         <sheep-dog-cucumber-gen-svc.version>1.47-SNAPSHOT</sheep-dog-cucumber-gen-svc.version>
         <sheep-dog-graphml-api-svc.version>1.33-SNAPSHOT</sheep-dog-graphml-api-svc.version>
         <sheep-dog-mbt-svc.version>1.26-SNAPSHOT</sheep-dog-mbt-svc.version>
@@ -72,8 +72,8 @@
              (packaging=pom, no compile phase). -->
         <dependency>
             <groupId>org.farhan</groupId>
-            <artifactId>sheep-dog-asciidoc-api-svc</artifactId>
-            <version>${sheep-dog-asciidoc-api-svc.version}</version>
+            <artifactId>sheep-dog-uml-api-svc</artifactId>
+            <version>${sheep-dog-uml-api-svc.version}</version>
             <type>pom</type>
         </dependency>
         <dependency>
@@ -124,7 +124,7 @@
                          rewrites `    tag:` under each listed block with
                          the resolved property value. -->
                     <imageTagMap>
-                        <sheep-dog-asciidoc-api-svc.version>asciidocApi</sheep-dog-asciidoc-api-svc.version>
+                        <sheep-dog-uml-api-svc.version>umlApi</sheep-dog-uml-api-svc.version>
                         <sheep-dog-cucumber-gen-svc.version>cucumberGen</sheep-dog-cucumber-gen-svc.version>
                         <sheep-dog-graphml-api-svc.version>graphmlApi</sheep-dog-graphml-api-svc.version>
                         <sheep-dog-mbt-svc.version>mbtSvc</sheep-dog-mbt-svc.version>

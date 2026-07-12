@@ -48,7 +48,7 @@ case "$ENV_NAME" in
 esac
 
 case "$svc" in
-    asciidoc)     deployment="sheep-dog-asciidoc-api-svc";  log="sheep-dog-asciidoc-api-svc.log" ;;
+    asciidoc)     deployment="sheep-dog-uml-api-svc";  log="sheep-dog-uml-api-svc.log" ;;
     cucumber-gen) deployment="sheep-dog-cucumber-gen-svc";  log="sheep-dog-cucumber-gen-svc.log" ;;
     mcp)          deployment="sheep-dog-mcp-svc";           log="sheep-dog-mcp-svc.log" ;;
     *)
