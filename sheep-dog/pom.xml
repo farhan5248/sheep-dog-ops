@@ -117,7 +117,7 @@
             <plugin>
                 <groupId>org.farhan</groupId>
                 <artifactId>sheep-dog-mgmt-maven-plugin</artifactId>
-                <version>1.55</version>
+                <version>1.56</version>
                 <configuration>
                     <!-- Map each pom property name to the service block
                          key under `images:` in values.yaml. The mojo
