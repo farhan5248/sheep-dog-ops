@@ -11,8 +11,13 @@
 #     environment — critically HOME, because minikube profiles live in
 #     ~/.minikube/ and root's HOME (/root) doesn't have one (#377).
 #
-# Reads $SUDO_PASSWORD from the environment (set in /etc/environment on
-# Ubuntu LAN hosts per tools.ubuntu.md). Fails fast if it isn't set.
+# Reads $SUDO_PASSWORD from the environment. On Ubuntu LAN hosts it lives in
+# ~/.config/sudo_password (mode 600, sourced from ~/.bashrc) — NOT
+# /etc/environment, which is world-readable (see tools-overview.md § env-vars
+# and #390). An interactive login shell already has it set; a non-interactive
+# SSH session (`ssh host '...'`) does NOT source ~/.bashrc, so run
+# `source ~/.config/sudo_password` before this script in that case.
+# Fails fast if it isn't set.
 #
 # Usage: ./start-tunnel-detached.sh
 # Idempotent — kills any pre-existing tunnel before launching the new one.

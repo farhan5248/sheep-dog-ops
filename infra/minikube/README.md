@@ -30,6 +30,46 @@ bash sheep-dog-ops/infra/minikube/start-tunnel-detached.sh
 # sheep-dog-amq is Running: kubectl rollout restart deploy -n qa
 ```
 
+### Remote startup from ubuntu-client (post-outage / bulk restart)
+
+Bringing both LAN clusters (ubuntu-team + ubuntu-sandbox) back up after a power
+outage without SSH-ing in and babysitting each one interactively. Run from
+ubuntu-client, once per host. The trick is that a non-interactive SSH session
+(`ssh host '...'`) does **not** source `~/.bashrc`, so `$SUDO_PASSWORD` isn't
+set and `setup-cluster.sh`'s `sudo iptables` calls have no cached credential and
+no tty to prompt on. Source the password file and prime `sudo` first:
+
+```bash
+# Per host: ubuntu-team (role team) / ubuntu-sandbox (role sandbox)
+ssh -tt ubuntu-team '
+  source ~/.config/sudo_password                 # $SUDO_PASSWORD (see tools-overview.md § env-vars)
+  echo "$SUDO_PASSWORD" | sudo -S -v             # cache the sudo credential for the iptables step
+  cd ~/git/sheep-dog-main
+  nohup bash sheep-dog-ops/infra/minikube/setup-cluster-ubuntu-team.sh \
+        > /tmp/setup-cluster.log 2>&1 &
+  disown
+  sleep 75                                        # hold the pty while the early sudo/iptables run
+'
+# setup-cluster ends in a *foreground* `minikube tunnel` that needs sudo; under
+# nohup with no tty it fails with "a terminal is required to read the password"
+# — expected and harmless. minikube itself is up. Then start the real tunnel:
+ssh ubuntu-team '
+  source ~/.config/sudo_password
+  bash sheep-dog-ops/infra/minikube/start-tunnel-detached.sh   # sudo -SE nohup, detached
+'
+```
+
+Poll `minikube status` and `tail /tmp/setup-cluster.log` between the two steps;
+wait for `apiserver: Running` and the trailing tunnel's sudo-failure line before
+launching `start-tunnel-detached.sh`. Verify from the client with
+`kubectl --context=minikube-team get ns` and `--context=minikube-sandbox`.
+
+> After a bulk restart, also check each host's checkouts aren't stale — a
+> reboot doesn't pull. `sheep-dog-ops`/`sheep-dog-specs` are public (anonymous
+> fetch); the rest are private and need `$GITHUB_TOKEN`. `sheep-dog-grammar/src-gen`
+> may show as locally-modified generated files that block a fast-forward —
+> `git checkout -- sheep-dog-grammar/src-gen` (it's regenerated) then pull.
+
 ```
 kubectl config get-contexts            # pipe through `cat` if output looks empty (snap kubectl quirk)
 kubectl config use-context minikube              # local cluster
