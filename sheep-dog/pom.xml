@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.farhan</groupId>
     <artifactId>sheep-dog-chart</artifactId>
-    <version>0.2.56-SNAPSHOT</version>
+    <version>0.2.56</version>
     <packaging>pom</packaging>
     <name>Sheep Dog Umbrella Helm Chart</name>
     <description>
@@ -24,11 +24,11 @@
              these to the latest releases in Nexus on `mvn ...:release`.
              sheep-dog-mgmt then reads the resolved values from project
              properties and writes them into values.yaml via imageTagMap. -->
-        <sheep-dog-uml-api-svc.version>1.47-SNAPSHOT</sheep-dog-uml-api-svc.version>
-        <sheep-dog-cucumber-gen-svc.version>1.52-SNAPSHOT</sheep-dog-cucumber-gen-svc.version>
-        <sheep-dog-graphml-api-svc.version>1.38-SNAPSHOT</sheep-dog-graphml-api-svc.version>
-        <sheep-dog-mbt-svc.version>1.31-SNAPSHOT</sheep-dog-mbt-svc.version>
-        <sheep-dog-mcp-svc.version>1.46-SNAPSHOT</sheep-dog-mcp-svc.version>
+        <sheep-dog-uml-api-svc.version>1.47</sheep-dog-uml-api-svc.version>
+        <sheep-dog-cucumber-gen-svc.version>1.52</sheep-dog-cucumber-gen-svc.version>
+        <sheep-dog-graphml-api-svc.version>1.38</sheep-dog-graphml-api-svc.version>
+        <sheep-dog-mbt-svc.version>1.31</sheep-dog-mbt-svc.version>
+        <sheep-dog-mcp-svc.version>1.46</sheep-dog-mcp-svc.version>
     </properties>
 
     <scm>
