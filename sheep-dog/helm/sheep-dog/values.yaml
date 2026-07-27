@@ -77,9 +77,12 @@ mcp:
 # service's memory (#534).
 mbtSvc:
   enabled: true
-# Shared repo volume mounted by both uml-api-svc and cucumber-gen-svc
-# at /repo. Bridges the cross-service file-store dependency previously served
-# by the shared MySQL DB (#388). RWO works on single-node minikube because
-# both pods land on the same node; multi-node will need RWX.
+# Repo volume mounted at /repo by uml-api-svc, graphml-api-svc and
+# cucumber-gen-svc, each under its own per-service subtree
+# (/repo/<service>/) so a per-tag clear can never wipe another service's
+# files (#602). UML model transfer between uml-api and cucumber-gen is REST
+# now (#199/#577); the PVC no longer bridges a cross-service dependency.
+# RWO works on single-node minikube because the pods land on the same node;
+# multi-node will need RWX.
 repo:
   pvcSize: 1Gi

@@ -28,7 +28,7 @@ spec:
             - name: LOG_PATH
               value: "/logs"
             - name: SHEEPDOG_REPO_BASEDIR
-              value: "/repo/"
+              value: "/repo/cucumber-gen-svc/"
             - name: SPRING_ARTEMIS_HOST
               value: sheep-dog-amq
             - name: SPRING_ARTEMIS_PORT
