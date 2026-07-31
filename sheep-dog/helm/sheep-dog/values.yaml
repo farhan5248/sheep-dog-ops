@@ -10,23 +10,23 @@ images:
     pullPolicy: IfNotPresent
   umlApi:
     repository: nexus-docker.sheepdog.io/sheep-dog-uml-api-svc
-    tag: "1.52"
+    tag: "1.53"
     pullPolicy: Always
   cucumberGen:
     repository: nexus-docker.sheepdog.io/sheep-dog-cucumber-gen-svc
-    tag: "1.57"
+    tag: "1.58"
     pullPolicy: Always
   graphmlApi:
     repository: nexus-docker.sheepdog.io/sheep-dog-graphml-api-svc
-    tag: "1.43"
+    tag: "1.44"
     pullPolicy: Always
   mcp:
     repository: nexus-docker.sheepdog.io/sheep-dog-mcp-svc
-    tag: "1.51"
+    tag: "1.52"
     pullPolicy: Always
   mbtSvc:
     repository: nexus-docker.sheepdog.io/sheep-dog-mbt-svc
-    tag: "1.36"
+    tag: "1.37"
     pullPolicy: Always
 
 # Ingress host for the sheep-dog ingress.
